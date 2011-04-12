@@ -31,7 +31,7 @@ class OntoWiki_Request extends Zend_Controller_Request_Http
     {
         // get parameter value from Zend_Request
         $value = parent::getParam($key, $default);
-        
+
         if ($expandNamespace) {
             // expandable parameters cannot be arrays
             if (is_array($value)) {

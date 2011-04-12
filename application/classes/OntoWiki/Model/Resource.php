@@ -142,7 +142,7 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
                 );
                 
                 $currentResults = $this->_store->sparqlQuery($query, $options);
-                
+
                 if (isset($currentResults['bindings'])) {
                     $this->_queryResults[$graph] = $currentResults['bindings'];
                 } else {
@@ -250,7 +250,47 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
                             array_push($objects[$predicateUri], $row['object']['value']);
 
                             break;
+                        case 'bnode':
+                            $nodeID = $row['object']['value'];
 
+                            // every URI objects is only used once for each statement
+                            if (in_array($nodeID, $objects[$predicateUri])) {
+                                continue;
+                            }
+
+                            $url->setParam('r', $this->_blankNodePrefix() . $nodeID, true);
+                            $value['url'] = (string)$url;
+
+                            // URI
+                            $value['uri'] = $this->_blankNodePrefix() . $nodeID;
+                            
+                            // title
+                            $title = '[' . $this->_titleHelper->getTitle($nodeID, $this->_lang) . ']';
+
+                            /**
+                             * @trigger onDisplayObjectPropertyValue Triggered if an object value of some 
+                             * property is returned. Plugins can attach to this trigger in order to modify 
+                             * the value that gets displayed.
+                             * Event payload: value, property, title and link
+                             */
+                            // set up event
+                            $event = new Erfurt_Event('onDisplayObjectPropertyValue');
+                            $event->value    = $nodeID;
+                            $event->property = $predicateUri;
+                            $event->title    = $title;
+                            $event->link     = (string)$url;
+
+                            // trigger
+                            $value['object'] = $event->trigger();
+
+                            if (!$event->handled()) {
+                                // object (modified by plug-ins)
+                                $value['object'] = $title;
+                            }
+
+                            array_push($objects[$predicateUri], $nodeID);
+
+                            break;
                         case 'typed-literal':
                             $event = new Erfurt_Event('onDisplayLiteralPropertyValue');
                             $value['datatype'] = OntoWiki_Utils::compactUri($row['object']['datatype']);
@@ -366,6 +406,12 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
             return $this->_valueResults;
         }
     }
+
+    protected function _blankNodePrefix()
+    {
+        // TODO: from config
+        return 'nodeID:';
+    }
     
     /**
      * Builds the SPARQL query
@@ -375,18 +421,18 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
         $query  = new Erfurt_Sparql_Query2();
         
         $uri = new Erfurt_Sparql_Query2_IriRef($this->_uri);
-        $pred_var = new Erfurt_Sparql_Query2_Var("predicate");
-        $obj_var = new Erfurt_Sparql_Query2_Var("object");
+        $pred_var = new Erfurt_Sparql_Query2_Var('predicate');
+        $obj_var = new Erfurt_Sparql_Query2_Var('object');
         
         $query
             ->addTriple($uri, $pred_var, $obj_var);
-        $query->addFilter(
-            new Erfurt_Sparql_Query2_UnaryExpressionNot(
-               new Erfurt_Sparql_Query2_isBlank(
-                   $obj_var
-               )
-           )
-        );
+        // $query->addFilter(
+            // new Erfurt_Sparql_Query2_UnaryExpressionNot(
+               // new Erfurt_Sparql_Query2_isBlank(
+                   // $obj_var
+               // )
+           // )
+        // );
 
         if(!empty($this->_ignoredPredicates)){
             $or = new Erfurt_Sparql_Query2_ConditionalAndExpression();

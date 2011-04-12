@@ -80,6 +80,7 @@ class OntoWiki_Controller_Plugin_SetupHelper extends Zend_Controller_Plugin_Abst
             if (isset($request->r)) {
                 $graph = $ontoWiki->selectedModel;
                 if ($graph instanceof Erfurt_Rdf_Model) {
+
                     $resource = new OntoWiki_Resource($request->getParam('r', null, true), $graph);
                     $ontoWiki->selectedResource = $resource;
                 } else {
