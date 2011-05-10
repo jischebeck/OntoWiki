@@ -1065,6 +1065,33 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
                     if (!$event->handled()) {
                         $value = $titleHelper->getTitle($objectUri, $this->_lang);
                     }
+                } else if ($data['type'] == 'bnode') {
+                    $nodeID = $data['value'];
+
+                    // HACK: modify array for bnode support
+                    $data['value'] = $this->_blankNodePrefix() . $nodeID;
+
+
+                    $url->setParam('r', $this->_blankNodePrefix() . $nodeID, true);
+                    $link = (string)$url;
+
+                    // set up event
+                    $event = new Erfurt_Event('onDisplayObjectPropertyValue');
+                    // find URI
+                    foreach ($this->_shownProperties as $property) {
+                        if ($varName == $property['varName']) {
+                            $event->property = $property['uri'];
+                        }
+                    }
+                    $event->value = $this->_blankNodePrefix() . $nodeID;
+                    $value = $event->trigger();
+
+                    if (!$event->handled()) {
+                        $value = $titleHelper->getTitle($nodeID, $this->_lang);
+                    }
+
+                    // Enclose in bNode brackets
+                    $value = '[' . $value . ']';
                 } else {
                     // object is a literal
                     $object = $data['value'];
@@ -1242,6 +1269,11 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
         }
 
         return $values;
+    }
+
+    protected function _blankNodePrefix()
+    {
+        return 'nodeID:';
     }
 
     /**
