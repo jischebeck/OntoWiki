@@ -130,17 +130,16 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
             //    ->add($this->_resourceVar);
 
         // when resourceVar is the object - prevent literals
-        $this->_resourceQuery->addFilter(
-            new Erfurt_Sparql_Query2_ConditionalAndExpression(
-                array(
-                    //new Erfurt_Sparql_Query2_isUri($this->_resourceVar),
-                    
-                    new Erfurt_Sparql_Query2_UnaryExpressionNot(
-                        new Erfurt_Sparql_Query2_isBlank($this->_resourceVar)
-                    )
-                )
-            )
-        );
+        // $this->_resourceQuery->addFilter(
+            // new Erfurt_Sparql_Query2_ConditionalAndExpression(
+                // array(
+                    // new Erfurt_Sparql_Query2_isUri($this->_resourceVar),
+                    // new Erfurt_Sparql_Query2_UnaryExpressionNot(
+                        // new Erfurt_Sparql_Query2_isBlank($this->_resourceVar)
+                    // )
+                // )
+            // )
+        // );
 
         //build value query
         $this->_valueQuery = new Erfurt_Sparql_Query2();
@@ -1036,9 +1035,9 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
                 }
 
                 if ($data['type'] == 'uri') {
-                    if(substr($data['value'], 0, 2) == "_:"){
-                        continue; // skip blanknode values here due to backend problems with filters
-                    }
+                    // if(substr($data['value'], 0, 2) == "_:"){
+                        // continue; // skip blanknode values here due to backend problems with filters
+                    // }
 
                     // object type is uri --> handle object property
                     $objectUri = $data['value'];
@@ -1293,7 +1292,7 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
         $titleHelper->addResources($uris);
         
         $url = new OntoWiki_Url(array('route' => 'properties'), array('r'));
-    
+
        $propertyResults = array();
        $i = 0;
         foreach ($properties as $property) {
@@ -1371,20 +1370,35 @@ public function __construct (Erfurt_Store $store, Erfurt_Rdf_Model $model, $opti
         $resourceResults = array();
 
         foreach ($resources as $resource) {
-            $uri = $resource['value'];
-            if (!array_key_exists($uri, $resourceResults)) {
-                $resourceResults[$uri] = $resource;
+            if ($resource['type'] == 'uri') {
+                $uri = $resource['value'];
+                if (!array_key_exists($uri, $resourceResults)) {
+                    $resourceResults[$uri] = $resource;
+                }
+
+                // URL
+                $url = $this->_defaultUrl['resource'];
+                $url->setParam($this->_defaultUrlParam['resource'],$uri,true);
+
+                $resourceResults[$uri]['url'] = (string) $url;
+
+                // title
+                $resourceResults[$uri]['title'] = $titleHelper->getTitle($uri, $this->_lang);
+            } else if ($resource['type'] == 'bnode') {
+                $uri = $this->_blankNodePrefix() . $resource['value'];
+                if (!array_key_exists($uri, $resourceResults)) {
+                    $resourceResults[$uri] = $resource;
+                }
+
+                // URL
+                $url = $this->_defaultUrl['resource'];
+                $url->setParam($this->_defaultUrlParam['resource'], $uri, true);
+
+                $resourceResults[$uri]['url'] = (string) $url;
+
+                // title
+                $resourceResults[$uri]['title'] = '[' . $titleHelper->getTitle($resource['value'], $this->_lang) . ']';
             }
-
-            // URL
-            $url = $this->_defaultUrl['resource'];
-            $url->setParam($this->_defaultUrlParam['resource'],$uri,true);
-            
-            $resourceResults[$uri]['url'] = (string) $url;
-
-            // title
-            $resourceResults[$uri]['title'] =
-                $titleHelper->getTitle($uri, $this->_lang);
         }
         return $resourceResults;
     }
