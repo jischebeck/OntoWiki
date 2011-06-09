@@ -8,9 +8,10 @@ echo "---- starting postinst $@"
 
 ### VIRTUOSO CONFIGa
 virtetc="/etc/virtuoso-opensource-6.1/"
+virtvar="/var/lib/virtuoso-opensource-6.1/"
 virtuosoini="$virtetc/virtuoso.ini"
 virtautosqlsrc="/usr/share/dbconfig-common/data/ontowiki/install/virtuoso"
-virtautosql="$virtetc/autoexec.isql"
+virtautosql="$virtvar/db/autoexec.isql"
 
 # stop the server
 sudo service virtuoso-opensource-6.1 stop
@@ -22,12 +23,12 @@ sed 's/^\(DirsAllowed.*\)/\1, \/usr\/share\/ontowiki/' -i $virtuosoini
 
 # place autosql
 # TODO: check for existing autosql and backup as well as restore it afterwards
-#cp $virtautosqlsrc $virtautosql
+cp $virtautosqlsrc $virtautosql
 
 # restart the server
 sudo service virtuoso-opensource-6.1 start
-
-#rm $virtautosql
+sleep 5
+rm $virtautosql
 
 ### APACHE CONFIG
 
