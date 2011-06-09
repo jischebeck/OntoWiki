@@ -10,8 +10,12 @@ Vcs-Browser: http://code.google.com/p/ontowiki/source/list
 
 Package: ontowiki-virtuoso
 Architecture: all
-Depends: ontowiki-common, apache2, php5 | libapache2-mod-php5, php5-odbc, ${misc:Depends}
+Depends: virtuoso-opensource-6.1, ontowiki-common, apache2, php5 | libapache2-mod-php5, php5-odbc, sed, ${misc:Depends}
 Recommends: owcli
+Provides: ontowiki
+Conflicts: ontowiki
+Replaces: ontowiki (<< 0.9.6-10)
+Breaks: ontowiki (<< 0.9.6-10)
 Description: Semantic Data Wiki enabling the publication of RDF data
  OntoWiki is a tool providing support for agile, distributed knowledge
  engineering scenarios. OntoWiki facilitates the visual presentation of
@@ -39,6 +43,10 @@ Package: ontowiki-mysql
 Architecture: all
 Depends: ontowiki-common, mysql-server, apache2, php5 | libapache2-mod-php5, php5-mysql | php5-mysqli, ${misc:Depends}
 Recommends: owcli
+Provides: ontowiki
+Conflicts: ontowiki
+Replaces: ontowiki (<< 0.9.6-10)
+Breaks: ontowiki (<< 0.9.6-10)
 Description: Semantic Data Wiki enabling the publication of RDF data
  OntoWiki is a tool providing support for agile, distributed knowledge
  engineering scenarios. OntoWiki facilitates the visual presentation of

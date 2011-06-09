@@ -1,3 +1,16 @@
+ontowiki (0.9.6-11) lod2; urgency=low
+
+  * configuration directory split
+  * virtuoso autoexec.isql test
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 08:35:20 +0200
+
+ontowiki (0.9.6-10) lod2; urgency=low
+
+  * correct Depends, Replaces, Provides and Breaks tags
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 08:00:31 +0200
+
 ontowiki (0.9.6-9) lod2; urgency=low
 
   * split package structure into virtuoso, mysql and common (sub-)packages
