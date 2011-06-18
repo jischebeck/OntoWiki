@@ -27,8 +27,7 @@ cp $virtautosqlsrc $virtautosql
 
 # restart the server
 sudo service virtuoso-opensource-6.1 start
-sleep 5
-rm $virtautosql
+#rm $virtautosql
 
 ### APACHE CONFIG
 

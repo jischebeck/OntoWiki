@@ -1,4 +1,5 @@
 /usr/share/php/libzend-framework-php/Zend /usr/share/ontowiki/libraries/Zend
+/usr/share/php/liberfurt-php /usr/share/ontowiki/libraries/Erfurt
 
 /usr/share/php/markdown.php /usr/share/ontowiki/extensions/markdown/parser/markdown.php
 
