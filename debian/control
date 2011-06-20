@@ -10,7 +10,7 @@ Vcs-Browser: http://code.google.com/p/ontowiki/source/list
 
 Package: ontowiki-virtuoso
 Architecture: all
-Depends: virtuoso-opensource-6.1, ontowiki-common, apache2, php5 | libapache2-mod-php5, php5-odbc, sed, ${misc:Depends}
+Depends: virtuoso-opensource-6.1, ontowiki-common, apache2, php5 | libapache2-mod-php5, php5-odbc, sed, pwgen, ${misc:Depends}
 Recommends: owcli
 Provides: ontowiki
 Conflicts: ontowiki
@@ -41,7 +41,7 @@ Description: Semantic Data Wiki enabling the publication of RDF data
 
 Package: ontowiki-mysql
 Architecture: all
-Depends: ontowiki-common, mysql-server, apache2, php5 | libapache2-mod-php5, php5-mysql | php5-mysqli, ${misc:Depends}
+Depends: ontowiki-common, mysql-server, apache2, php5 | libapache2-mod-php5, php5-mysql | php5-mysqli, pwgen, ${misc:Depends}
 Recommends: owcli
 Provides: ontowiki
 Conflicts: ontowiki

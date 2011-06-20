@@ -9,7 +9,7 @@ mysql_run="mysql --defaults-extra-file=/etc/mysql/debian.cnf"
 
 ow_user="ontowiki_deb"
 ow_db="$ow_user"
-ow_pass=`pwgen -1`
+#ow_pass=`pwgen -1`
 ow_pass="usepwgenhere"
 
 #service mysql start
