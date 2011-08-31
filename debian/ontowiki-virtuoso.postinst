@@ -20,6 +20,8 @@ sudo service virtuoso-opensource-6.1 stop
 # try to remove the addition first in order to avoid double entries
 sed 's/^\(DirsAllowed.*\)\(, \/usr\/share\/ontowiki\)\(.*\)/\1\3/' -i $virtuosoini
 sed 's/^\(DirsAllowed.*\)/\1, \/usr\/share\/ontowiki/' -i $virtuosoini
+sed 's/^\(DirsAllowed.*\)\(, \/usr\/share\/php\/liberfurt-php\)\(.*\)/\1\3/' -i $virtuosoini
+sed 's/^\(DirsAllowed.*\)/\1, \/usr\/share\/php\/liberfurt-php/' -i $virtuosoini
 
 # place autosql
 # TODO: check for existing autosql and backup as well as restore it afterwards
