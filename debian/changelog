@@ -1,5 +1,6 @@
 ontowiki (0.9.6-15) lod2; urgency=low
 
+  * feature: ckan registration for non localhost models
   * fix: depends-on-essential-package-without-using-version (sed)
   * fix: AllowDirs now for new erfurt position
   * hack: virtuoso's dba acount used (this should be changed soon!)
