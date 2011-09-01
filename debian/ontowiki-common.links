@@ -6,3 +6,5 @@
 /usr/share/javascript/jquery/jquery.min.js /usr/share/ontowiki/extensions/themes/silverblue/scripts/libraries/jquery.js
 /usr/share/javascript/jquery/jquery.min.js /usr/share/ontowiki/libraries/RDFauthor/libraries/jquery.js
 
+/usr/share/php/libphp-pclzip/pclzip.lib.php /usr/share/ontowiki/extensions/exconf/pclzip.lib.php
+
