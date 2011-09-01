@@ -9,7 +9,6 @@ application/views usr/share/ontowiki/application
 
 extensions      usr/share/ontowiki
 
-libraries/Erfurt/Erfurt usr/share/ontowiki/libraries/Erfurt/
 libraries/ARC2 usr/share/ontowiki/libraries/
 libraries/Mimeparse.php usr/share/ontowiki/libraries/
 libraries/RDFauthor/img usr/share/ontowiki/libraries/RDFauthor

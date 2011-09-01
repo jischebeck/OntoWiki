@@ -1,3 +1,42 @@
+ontowiki (0.9.6-15) lod2; urgency=low
+
+  * fix: depends-on-essential-package-without-using-version (sed)
+  * fix: AllowDirs now for new erfurt position
+  * hack: virtuoso's dba acount used (this should be changed soon!)
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Wed, 22 Jun 2011 05:45:00 +0200
+
+ontowiki (0.9.6-14) lod2; urgency=low
+
+  * correct pwgen dependency 
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Mon, 20 Jun 2011 10:58:27 +0200
+
+ontowiki (0.9.6-13) lod2; urgency=low
+
+  * now with liberfurt-php dependency
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 12:35:20 +0200
+
+ontowiki (0.9.6-12) lod2; urgency=low
+
+  * virtuoso autoexec.isql now on correct place?
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 12:35:20 +0200
+
+ontowiki (0.9.6-11) lod2; urgency=low
+
+  * configuration directory split
+  * virtuoso autoexec.isql test
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 08:35:20 +0200
+
+ontowiki (0.9.6-10) lod2; urgency=low
+
+  * correct Depends, Replaces, Provides and Breaks tags
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 09 Jun 2011 08:00:31 +0200
+
 ontowiki (0.9.6-9) lod2; urgency=low
 
   * split package structure into virtuoso, mysql and common (sub-)packages
