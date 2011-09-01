@@ -5,6 +5,7 @@ ontowiki (0.9.6-15) lod2; urgency=low
   * fix: AllowDirs now for new erfurt position
   * hack: virtuoso's dba acount used (this should be changed soon!)
   * new dependency: libphp-pclzip for extension configuration
+  * new dependency: tinymce in RDFauthor
 
  -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Wed, 22 Jun 2011 05:45:00 +0200
 
