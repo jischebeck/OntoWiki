@@ -1,3 +1,9 @@
+ontowiki (0.9.6-16) lod2; urgency=low
+
+  * fix: RDFauthor integration
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Thu, 01 Sep 2011 10:01:16 +0200
+
 ontowiki (0.9.6-15) lod2; urgency=low
 
   * feature: ckan registration for non localhost models
