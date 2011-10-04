@@ -8,11 +8,11 @@
 
 /usr/share/php/libphp-pclzip/pclzip.lib.php /usr/share/ontowiki/extensions/exconf/pclzip.lib.php
 
-/usr/share/tinymce/www/langs /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/langs
-/usr/share/tinymce/www/plugins /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/plugins
-/usr/share/tinymce/www/themes /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/themes
-/usr/share/tinymce/www/tiny_mce.js /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce.js
-/usr/share/tinymce/www/tiny_mce_popup.js /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce_popup.js
-/usr/share/tinymce/www/tiny_mce_src.js /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce_src.js
-/usr/share/tinymce/www/utils /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/utils
+/usr/share/tinymce/www/langs               /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/langs
+/usr/share/tinymce/www/plugins             /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/plugins
+/usr/share/tinymce/www/themes              /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/themes
+/usr/share/tinymce/www/tiny_mce.js         /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce.js
+/usr/share/tinymce/www/tiny_mce_popup.js   /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce_popup.js
+/usr/share/tinymce/www/tiny_mce_src.js     /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/tiny_mce_src.js
+/usr/share/tinymce/www/utils               /usr/share/ontowiki/libraries/RDFauthor/libraries/tiny_mce/utils
 

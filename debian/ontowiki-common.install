@@ -1,4 +1,3 @@
-favicon.png     usr/share/ontowiki
 index.php       usr/share/ontowiki
 
 application/Bootstrap.php usr/share/ontowiki/application
@@ -6,6 +5,7 @@ application/classes usr/share/ontowiki/application
 application/config usr/share/ontowiki/application
 application/controllers usr/share/ontowiki/application
 application/views usr/share/ontowiki/application
+application/favicon.png usr/share/ontowiki/application
 
 extensions      usr/share/ontowiki
 

@@ -1,3 +1,13 @@
+ontowiki (0.9.6-18) lod2; urgency=low
+
+  * Adds support for case-insensitive URI matching and trailing slashes tolerance.
+  * Add text/turtle to type mappings.
+  * remove patternmanager, tagging, csvimport, site and map extensions
+  * improve error messages on bootstrap
+  * build from moved github sources
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Tue, 04 Oct 2011 14:42:39 +0200
+
 ontowiki (0.9.6-17) lod2; urgency=low
 
   * removed detailed dependency information for more compatibility
