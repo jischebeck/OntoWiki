@@ -91,7 +91,7 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
             
             // get results
             $results = $this->getQueryResults();
-            
+
             // url object to build URLs
             $url = new OntoWiki_Url(array('route' => 'properties'), array('r'));
             
@@ -124,7 +124,7 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
                 }
             }
         }
-        
+
         return $this->_predicateResults;
     }
     
@@ -142,7 +142,7 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
                 );
                 
                 $currentResults = $this->_store->sparqlQuery($query, $options);
-                
+
                 if (isset($currentResults['results']['bindings'])) {
                     $this->_queryResults[$graph] = $currentResults['results']['bindings'];
                 } else {
@@ -258,11 +258,11 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
                                 continue;
                             }
 
-                            $url->setParam('r', $this->_blankNodePrefix() . $nodeID, true);
+                            $url->setParam('r', $nodeID, true);
                             $value['url'] = (string)$url;
 
                             // URI
-                            $value['uri'] = $this->_blankNodePrefix() . $nodeID;
+                            $value['uri'] = $nodeID;
                             
                             // title
                             $title = '[' . $this->_titleHelper->getTitle($nodeID, $this->_lang) . ']';
@@ -415,7 +415,7 @@ class OntoWiki_Model_Resource extends OntoWiki_Model
     protected function _blankNodePrefix()
     {
         // TODO: from config
-        return 'nodeID:';
+        return 'node://';
     }
     
     /**

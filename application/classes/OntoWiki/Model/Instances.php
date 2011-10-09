@@ -1061,10 +1061,10 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
                     $nodeID = $data['value'];
 
                     // HACK: modify array for bnode support
-                    $data['value'] = $this->_blankNodePrefix() . $nodeID;
+                    $data['value'] = $nodeID;
 
 
-                    $url->setParam('r', $this->_blankNodePrefix() . $nodeID, true);
+                    $url->setParam('r', $nodeID, true);
                     $link = (string)$url;
 
                     // set up event
@@ -1265,7 +1265,7 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
 
     protected function _blankNodePrefix()
     {
-        return 'nodeID:';
+        return 'node://';
     }
 
     /**
@@ -1378,7 +1378,7 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
                 // title
                 $resourceResults[$uri]['title'] = $titleHelper->getTitle($uri, $this->_getLanguage());
             } else if ($resource['type'] == 'bnode') {
-                $uri = $this->_blankNodePrefix() . $resource['value'];
+                $uri = $resource['value'];
                 if (!array_key_exists($uri, $resourceResults)) {
                     $resourceResults[$uri] = $resource;
                 }
