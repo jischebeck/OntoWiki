@@ -1404,6 +1404,7 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
                 $url->setParam($this->_defaultUrlParam['resource'],$uri,true);
 
                 $resourceResults[$uri]['url'] = (string) $url;
+                $resourceResults[$uri]['uri'] = $uri;
 
                 // title
                 $resourceResults[$uri]['title'] = $titleHelper->getTitle($uri, $this->_getLanguage());
@@ -1418,6 +1419,7 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
                 $url->setParam($this->_defaultUrlParam['resource'], $uri, true);
 
                 $resourceResults[$uri]['url'] = (string) $url;
+                $resourceResults[$uri]['uri'] = $uri;
 
                 // title
                 $resourceResults[$uri]['title'] = '[' . $titleHelper->getTitle($resource['value'], $this->_getLanguage()) . ']';
