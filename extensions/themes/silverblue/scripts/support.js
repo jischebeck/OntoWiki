@@ -245,24 +245,9 @@ function removeResourceMenus() {
 }
 
 
-function showResourceMenu(event) {
+function showResourceMenu(event, json) {
     // remove all other menus
     removeResourceMenus();
-    
-    // URI of the resource clicked (used attribute can be about and resource)
-    if ( typeof $(event.target).parent().attr('about') != 'undefined' ) {
-        resourceUri = $(event.target).parent().attr('about');
-    } else if ( typeof $(event.target).parent().attr('resource') != 'undefined' ) {
-        resourceUri = $(event.target).parent().attr('resource');
-    } else {
-        // no usable resource uri, so we exit here
-        return false;
-    }
-
-    encodedResourceUri = encodeURIComponent(resourceUri);
-    resource = $(event.target).parent();
-    
-    parentHref = tempHrefs[$(event.target).parent().attr('id')];
     
     menuX  = event.pageX - 30;
     menuY  = event.pageY - 20;
@@ -275,60 +260,82 @@ function showResourceMenu(event) {
         .click(function(event) {event.stopPropagation();});
 
     $('#' + menuId).fadeIn();
-
-    var urlParams = {};
-    urlParams.resource = resourceUri;
     
-    // load menu with specific options from service
-    $.ajax({
-        type: "GET",
-        url: urlBase + 'service/menu/',
-        data: urlParams,
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
-            alert("error occured - details at firebug-console");
-            console.log("menu service error\nfailure message:\n" + textStatus);
-            $('#' + menuId).fadeOut();
-        },
-        success: function(data, textStatus) {
-            try {
+    parentHref = tempHrefs[$(event.target).parent().attr('id')];
+    
+    function onJSON(menuData, textStatus) {
+        try {
+            //console.log(menuData)
+            var menuStr = '';
+            var tempStr = '';
+            var href    = '';
 
-                menuData = $.evalJSON(data);
-
-                var menuStr = '';
-                var tempStr = '';
-                var href    = '';
-
-                // construct menu content
-                for (var key in menuData) {
-                    href = menuData[key];
-                    if ( menuData[key] == '_---_' ) {
-                        menuStr += '</ul><hr/><ul>';
+            // construct menu content
+            for (var key in menuData) {
+                href = menuData[key];
+                if ( menuData[key] == '_---_' ) {
+                    menuStr += '</ul><hr/><ul>';
+                } else {
+                    if (typeof(href) == 'object') {
+                        tempStr = '<a class="' + href['class'] + '" about="' + href['about'] + '">' + key + '</a>';
                     } else {
-                        if (typeof(href) == 'object') {
-                            tempStr = '<a class="' + href['class'] + '" about="' + href['about'] + '">' + key + '</a>';
-                        } else {
-                            tempStr = '<a href="' + href + '">' + key + '</a>';
-                            if (href == parentHref) {
-                                tempStr = '<strong>' + tempStr + '</strong>';
-                            }
+                        tempStr = '<a href="' + href + '">' + key + '</a>';
+                        if (href == parentHref) {
+                            tempStr = '<strong>' + tempStr + '</strong>';
                         }
-                        menuStr += '<li>' + tempStr + '</li>';
                     }
+                    menuStr += '<li>' + tempStr + '</li>';
                 }
-
-                // append menu string with surrounding list
-                $('#' + menuId).append('<ul>' + menuStr + '</ul>');
-
-                // remove is-processing
-                $('#' + menuId).toggleClass('is-processing');
-
-            } catch (e) {
-                alert("error occured - details at firebug-console");
-                console.log("menu service error\nmenu service replied:\n" + data);
-                $('#' + menuId).fadeOut();
             }
+
+            // append menu string with surrounding list
+            $('#' + menuId).append('<ul>' + menuStr + '</ul>');
+
+            // remove is-processing
+            $('#' + menuId).toggleClass('is-processing');
+
+        } catch (e) {
+            alert("error occured - details at firebug-console");
+            console.log("menu service error\nmenu service replied:\n" + data);
+            $('#' + menuId).fadeOut();
         }
-    });
+    }
+    
+    if(json == undefined){
+        // URI of the resource clicked (used attribute can be about and resource)
+        if ( typeof $(event.target).parent().attr('about') != 'undefined' ) {
+            resourceUri = $(event.target).parent().attr('about');
+        } else if ( typeof $(event.target).parent().attr('resource') != 'undefined' ) {
+            resourceUri = $(event.target).parent().attr('resource');
+        } else {
+            // no usable resource uri, so we exit here
+            return false;
+        }
+
+        encodedResourceUri = encodeURIComponent(resourceUri);
+        resource = $(event.target).parent();
+
+        
+
+        var urlParams = {};
+        urlParams.resource = resourceUri;
+
+
+        // load menu with specific options from service
+        $.ajax({
+            type: "GET",
+            url: urlBase + 'service/menu/',
+            data: urlParams,
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("error occured - details at firebug-console");
+                console.log("menu service error\nfailure message:\n" + textStatus);
+                $('#' + menuId).fadeOut();
+            },
+            success: function(data, textStatus){onJSON($.evalJSON(data), textStatus);}
+        });
+    } else {
+        onJSON(json)
+    }
 
     // prevent href trigger
     event.stopPropagation();
@@ -339,7 +346,8 @@ function showResourceMenu(event) {
  */
 function loadRDFauthor(callback) {
     var loaderURI = RDFAUTHOR_BASE + 'src/rdfauthor.js';
-    if ($('head').children('script[src="' + loaderURI + '"]').length > 0) {
+    
+    if ($('head').children('script[src=' + loaderURI + ']').length > 0) {
         callback();
     } else {
         RDFAUTHOR_READY_CALLBACK = callback;
@@ -419,10 +427,8 @@ function createInstanceFromClassURI(type, dataCallback) {
             // get default resource uri for subjects in added statements (issue 673)
             // grab first object key
             for (var subjectUri in data) {break;};
-           
             // add statements to RDFauthor
-            populateRDFauthor(data, true, null, selectedGraph.URI);
-           
+            populateRDFauthor(data, true, subjectUri, selectedGraph.URI);
             RDFauthor.setOptions({
                 saveButtonTitle: 'Create Resource',
                 cancelButtonTitle: 'Cancel',
@@ -548,7 +554,7 @@ function editProperty(event) {
         });
 
         RDFauthor.start($(element).parents('td'));
-
+        $('.edit-enable').addClass('active');
         $('.edit').each(function() {
             var button = this;
             $(this).fadeIn(effectTime);
@@ -556,4 +562,41 @@ function editProperty(event) {
     });
 
     //return false;
+}
+
+function addProperty() {
+    var ID = RDFauthor.nextID();
+    var td1ID = 'rdfauthor-property-selector-' + ID;
+    var td2ID = 'rdfauthor-property-widget-' + ID;
+
+    $('.edit').each(function() {
+        $(this).fadeIn(effectTime);
+    });
+
+    $('table.rdfa')
+        .children('tbody')
+        .prepend('<tr><td colspan="2" width="120"><div style="width:75%" id="' + td1ID + '"></div></td></tr>');
+    
+    var selectorOptions = {
+        container: $('#' + td1ID), 
+        selectionCallback: function (uri, label) {
+            var statement = new Statement({
+                subject: '<' + RDFAUTHOR_DEFAULT_SUBJECT + '>', 
+                predicate: '<' + uri + '>'
+            }, {
+                title: label, 
+                graph: RDFAUTHOR_DEFAULT_GRAPH
+            });
+            
+            var owURL = urlBase + 'view?r=' + encodeURIComponent(uri);
+            $('#' + td1ID).closest('td')
+                .attr('colspan', '1')
+                .html('<a class="hasMenu" about="' + uri + '" href="' + owURL + '">' + label + '</a>')
+                .after('<td id="' + td2ID + '"></td>');
+            RDFauthor.getView().addWidget(statement, null, {container: $('#' + td2ID), activate: true});
+        }
+    };
+    
+    var selector = new Selector(RDFAUTHOR_DEFAULT_GRAPH, RDFAUTHOR_DEFAULT_SUBJECT, selectorOptions);
+    selector.presentInContainer();
 }

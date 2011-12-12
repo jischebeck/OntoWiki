@@ -217,6 +217,24 @@ $(document).ready(function() {
             }
         });
     }
+    /*
+     *  on press enter, this type of textbox looses focus and gives it to the next textfield
+     */
+    $('.focusNextOnEnter').keypress(function(event) {
+        // return pressed
+        if (event.target.tagName.toLowerCase() != 'textarea' && event.which == 13) {
+            var me = $(this)
+            var next = me.next();
+            if(next.get(0).tagName.toLowerCase() == me.get(0).tagName.toLowerCase()){
+                next.focus();
+            } else {
+                var next2 = me.parent().next().find('>'+me.get(0).tagName.toLowerCase()+':first')
+                if (next2.length != 0){
+                    next2.focus();
+                } 
+            } 
+        }
+    });
     
     // autosubmit
     $('a.reset').click(function() {
@@ -228,8 +246,11 @@ $(document).ready(function() {
     
     // init new resource based on type
     $('.init-resource').click(function() {
-       var type       = $(this).closest('.window').find('*[typeof]').eq(0).attr('typeof');
-       createInstanceFromClassURI(type);
+        var type       = $(this).closest('.window').find('*[typeof]').eq(0).attr('typeof');
+        var namespace  = type.split(':')[0];
+        var instance = type.split(':')[1];
+        var namespaceUri = $(this).closest('.window').find('table').attr('xmlns:'+namespace);
+        createInstanceFromClassURI(namespaceUri+instance);
     });
     
     $('.edit.save').click(function() {
@@ -263,6 +284,9 @@ $(document).ready(function() {
             $(button).removeClass('active');
             window.location.href = window.location.href;
         } else {
+            if(typeof(RDFauthor) !== 'undefined') {
+                RDFauthor.cancel();
+            }
             loadRDFauthor(function () {
                 RDFauthor.setOptions({
                     onSubmitSuccess: function () {
@@ -364,42 +388,62 @@ $(document).ready(function() {
     
     // add property
     $('.property-add').click(function() {
-        var ID = RDFauthor.nextID();
-        var td1ID = 'rdfauthor-property-selector-' + ID;
-        var td2ID = 'rdfauthor-property-widget-' + ID;
-        
-        $('table.rdfa')
-            .children('tbody')
-            .prepend('<tr><td colspan="2" width="120"><div style="width:75%" id="' + td1ID + '"></div></td></tr>');
-        
-        var selectorOptions = {
-            container: $('#' + td1ID), 
-            selectionCallback: function (uri, label) {
-                var statement = new Statement({
-                    subject: '<' + RDFAUTHOR_DEFAULT_SUBJECT + '>', 
-                    predicate: '<' + uri + '>'
-                }, {
-                    title: label, 
-                    graph: RDFAUTHOR_DEFAULT_GRAPH
-                });
-                
-                var owURL = urlBase + 'view?r=' + encodeURIComponent(uri);
-                $('#' + td1ID).closest('td')
-                    .attr('colspan', '1')
-                    .html('<a class="hasMenu" about="' + uri + '" href="' + owURL + '">' + label + '</a>')
-                    .after('<td id="' + td2ID + '"></td>');
-                RDFauthor.getView().addWidget(statement, null, {container: $('#' + td2ID), activate: true});
-            }
-        };
-        
-        var selector = new Selector(RDFAUTHOR_DEFAULT_GRAPH, RDFAUTHOR_DEFAULT_SUBJECT, selectorOptions);
-        selector.presentInContainer();
+        if(typeof(RDFauthor) === 'undefined') {
+            loadRDFauthor(function () {
+                RDFauthor.setOptions({
+                    onSubmitSuccess: function () {
+                        // var mainInnerContent = $('.window .content.has-innerwindows').eq(0).find('.innercontent');
+                        // mainInnerContent.load(document.URL);
 
-        // var propertyWidget = RDFauthor.getWidgetForHook('__PROPERTY__',null,null);
-        // console.log(propertyWidget);
-        // propertyWidget.init();
-        // propertyWidget.ready();
-        // propertyWidget.markup();
+                        // tell RDFauthor that page content has changed
+                        // RDFauthor.invalidatePage();
+
+                        $('.edit').each(function() {
+                            $(this).fadeOut(effectTime);
+                        });
+                        $('.edit-enable').removeClass('active');
+                        
+                        // HACK: reload whole page after 1000 ms
+                        window.setTimeout(function () {
+                            window.location.href = window.location.href;
+                        }, 500);
+                    }, 
+                    onCancel: function () {
+                        $('.edit').each(function() {
+                            $(this).fadeOut(effectTime);
+                        });
+                        $('.edit-enable').removeClass('active');
+                    }, 
+                    saveButtonTitle: 'Save Changes', 
+                    cancelButtonTitle: 'Cancel', 
+                    title: $('.section-mainwindows .window').eq(0).children('.title').eq(0).text(), 
+                    viewOptions: {
+                        // no statements needs popover
+                        type: $('.section-mainwindows table.Resource').length ? RDFAUTHOR_VIEW_MODE : 'popover', 
+                        container: function (statement) {
+                            var element = RDFauthor.elementForStatement(statement);
+                            var parent  = $(element).closest('div');
+                            
+                            if (!parent.hasClass('ontowiki-processed')) {
+                                parent.children().each(function () {
+                                    $(this).hide();
+                                });
+                                parent.addClass('ontowiki-processed');
+                            }
+                            
+                            return parent.get(0);
+                        }
+                    }
+                });
+                //workaround: don't load widget
+                RDFauthor.start($('head'));
+                $('.edit-enable').addClass('active');
+                setTimeout("addProperty()",500);
+            });
+        } else {
+            addProperty();
+        }
+        
     });
     
     $('.tabs').children('li').children('a').click(function() {

@@ -12,6 +12,8 @@ local.ini
 config.ini
 nbproject
 cache
+uploads
 libraries/Zend
 libraries/ZendFramework-1.*
 BlogPost
+extensions/dssn/libraries/lib-dssn-php

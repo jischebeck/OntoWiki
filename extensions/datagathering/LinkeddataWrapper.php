@@ -65,7 +65,7 @@ class LinkeddataWrapper extends Erfurt_Wrapper
         return 'Linked Data Wrapper';
     }
     
-    public function isAvailable($r, $graphUri)
+    public function isAvailable($r, $graphUri, $all = false)
     { 
         $uri = $r->getUri();
         $url = $r->getLocator();
@@ -90,10 +90,14 @@ class LinkeddataWrapper extends Erfurt_Wrapper
 
         // Test the URI.
         $this->_url = $url;
-        $client = $this->_getHttpClient($url, array(
-            'maxredirects'  => 0,
-            'timeout'       => 30
-        ));
+        try{ 
+            $client = $this->_getHttpClient($url, array(
+                'maxredirects'  => 0,
+                'timeout'       => 30
+            ));
+        } catch (Zend_Uri_Exception $e){
+            return false;
+        }
         
         $client->setHeaders('Accept', 'application/rdf+xml');
         $response = $client->request();
@@ -118,13 +122,20 @@ class LinkeddataWrapper extends Erfurt_Wrapper
             $ns = $tempArray['ns'];
             $tempArray = $tempArray['data'];
             
-            if (isset($tempArray[$uri])) {
-                $data = array($uri => $tempArray[$uri]);
-                $retVal = true;
+            if (!$all) {
+                //only load statements, that have the $uri as subject
+                if (isset($tempArray[$uri])) {
+                    $data = array($uri => $tempArray[$uri]);
+                    $retVal = true;
+                } else {
+                    $data = array();
+                    $ns = array();
+                    $retVal = false;
+                }
             } else {
-                $data = array();
-                $ns = array();
-                $retVal = false;
+                //all statements that were found
+                $data = $tempArray;
+                $retVal = true;
             }
         } else {
             // try n3
@@ -219,10 +230,10 @@ class LinkeddataWrapper extends Erfurt_Wrapper
         return true;
     }
     
-    public function run($r, $graphUri)
+    public function run($r, $graphUri, $all = false)
     { 
         if (null === $this->_cachedData) {
-            $isAvailable = $this->isAvailable($r, $graphUri);
+            $isAvailable = $this->isAvailable($r, $graphUri, $all);
         
             if ($isAvailable === false) {
                 return false;
@@ -240,11 +251,11 @@ class LinkeddataWrapper extends Erfurt_Wrapper
         );
         
         $uri = $r->getUri();
-        
+ 
         $fullResult['status_description'] = "Linked Data found for URI $uri";
         $fullResult['ns'] = $ns;
         $fullResult['add'] = $data;
-        
+         
         return $fullResult;
     }
     
@@ -330,24 +341,49 @@ class LinkeddataWrapper extends Erfurt_Wrapper
             $contentType = substr($contentType, 0, $pos);
         }
         
-        switch ($contentType) {
-            case 'application/rdf+xml':
-            case 'application/xml': // Hack for lsi urns
-            case 'text/plain':
-                $type = 'rdfxml';
-                break;
-            case 'application/json':
-                $type = 'rdfjson';
-                break;
-            case 'text/rdf+n3':
-            case 'text/n3':
-                $type = 'rdfn3';
-                break;
-            case 'text/html':
-                return $this->_handleResponseBodyHtml($response, $baseUri);
-            default:
-                require_once 'Erfurt/Wrapper/Exception.php';
-                throw new Erfurt_Wrapper_Exception('Server returned not supported content type: ' . $contentType);
+        $found = false;
+        if($contentType == 'text/plain' && !empty($baseUri)){
+            //if the mime type does not reveal anything, try file endings. duh
+            $parts = explode('.', $baseUri);
+            $ending = end($parts);
+            $found = true;
+            switch ($ending) {
+                case 'n3':
+                case 'ttl':
+                    $type = 'rdfn3';
+                    break;
+                case 'xml':
+                    $type = 'rdfxml';
+                    break;
+                case 'json':
+                    $type = 'rdfjson';
+                    break;
+                default:
+                    $found = false;
+                    break;
+            }
+        }
+        if(!$found){
+            //use the defined mime type
+            switch ($contentType) {
+                case 'application/rdf+xml':
+                case 'application/xml': // Hack for lsi urns
+                case 'text/plain':
+                    $type = 'rdfxml';
+                    break;
+                case 'application/json':
+                    $type = 'rdfjson';
+                    break;
+                case 'text/rdf+n3':
+                case 'text/n3':
+                    $type = 'rdfn3';
+                    break;
+                case 'text/html':
+                    return $this->_handleResponseBodyHtml($response, $baseUri);
+                default:
+                    require_once 'Erfurt/Wrapper/Exception.php';
+                    throw new Erfurt_Wrapper_Exception('Server returned not supported content type: ' . $contentType);
+            }
         }
         
         $data = $response->getBody();
