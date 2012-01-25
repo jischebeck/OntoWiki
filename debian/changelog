@@ -1,3 +1,9 @@
+ontowiki (0.9.6-19) lod2; urgency=low
+
+  * merged new develop branches into debian package
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Wed, 25 Jan 2012 10:03:59 +0100
+
 ontowiki (0.9.6-18) lod2; urgency=low
 
   * Adds support for case-insensitive URI matching and trailing slashes tolerance.
