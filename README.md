@@ -14,24 +14,4 @@ Other remarkable features are:
 
 OntoWiki is licensed under the [GNU General Public License Version 2, June 1991](http://www.gnu.org/licenses/gpl-2.0.txt) (license document is in the application subfolder).
 
-## Installation
-
-### via github repository
-
-* clone the repository into your web folder (e.g. `/var/www`)
-* enable Apaches rewrite  module (e.g. `a2enmod rewrite`)
-* run `make install` to download Zend, create log and cache dir as well as
-  initialize all git submodules
-* copy `config.ini-dist` to `config.ini` and modify it according to your store
-* open your browser, go to your ontowiki URL, login as `Admin` without pass and
-  change the password
-
-### via Debian package
-
-* install the LOD2 repository by downloading and adding the [lod2repository
-  package](http://stack.lod2.eu/lod2repository_current_all.deb)
-* update you package database (`sudo apt-get update`)
-* install `ontowiki-mysql` or `ontowiki-virtuoso` (`sudo apt-get ontowiki-virtuoso`)
-* open your browser, go to [your ontowiki URL](http://localhost/ontowiki/), login as `Admin` without pass and
-  change the password
-
+For an installation guide have a look at our [wiki](https://github.com/AKSW/OntoWiki/wiki/GetOntowikiUsers).

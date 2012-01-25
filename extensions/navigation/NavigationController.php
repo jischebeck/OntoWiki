@@ -64,7 +64,7 @@ class NavigationController extends OntoWiki_Controller_Component
         // disable standart navigation
         OntoWiki_Navigation::disableNavigation();
         // log action
-        $this->_owApp->logger->info('NavigationController Stage 1');
+        //$this->_owApp->logger->info('NavigationController Stage 1');
         // translate navigation title to selected language
         $this->view->placeholder('main.window.title')
             ->set($this->translate->_('Navigation'));
@@ -241,9 +241,9 @@ class NavigationController extends OntoWiki_Controller_Component
         if($query == null) return;
         
         // error logging
-        $this->_owApp->logger->info(
+        /*$this->_owApp->logger->info(
             'NavigationController _queryNavigationEntries Query: ' .$query->__toString()
-        );
+        );*/
 
         // get extended results
         $all_results = $this->model->sparqlQuery($query, array('result_format' => 'extended'));
@@ -560,8 +560,20 @@ class NavigationController extends OntoWiki_Controller_Component
         if( isset($setup->state->sorting) ){
             $query->getOrder()->add(new Erfurt_Sparql_Query2_Var('sortRes'), "ASC");
         } else if( isset($setup->config->ordering->relation) ){ // set ordering
+            $orderVar = new Erfurt_Sparql_Query2_Var('order');
+            $query->getWhere()->addElement(
+                new Erfurt_Sparql_Query2_OptionalGraphPattern(
+                    array(
+                        new Erfurt_Sparql_Query2_Triple(
+                            new Erfurt_Sparql_Query2_Var('resourceUri'), 
+                            new Erfurt_Sparql_Query2_IriRef($setup->config->ordering->relation),  
+                            $orderVar
+                        )
+                    )
+                )
+            );
             $query->getOrder()->add(
-                new Erfurt_Sparql_Query2_IriRef($setup->config->ordering->relation),
+                $orderVar,
                 $setup->config->ordering->modifier
             );
         }

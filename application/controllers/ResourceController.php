@@ -118,7 +118,6 @@ class ResourceController extends OntoWiki_Controller_Base {
 
                 if ($this->_erfurt->getAc()->isModelAllowed('edit', $g)) {
                     $editableFlags[$g] = true;
-                    $graphInfo[$g] = $titleHelper->getTitle($g, $this->_config->languages->locale);
                     $this->view->placeholder('update')->append(array(
                         'sourceGraph'    => $g,
                         'queryEndpoint'  => $this->_config->urlBase . 'sparql/',
@@ -156,19 +155,19 @@ class ResourceController extends OntoWiki_Controller_Base {
             // TODO: check acl
             $toolbar->appendButton(OntoWiki_Toolbar::EDIT, array('name' => 'Edit Properties'));
             $toolbar->appendButton(OntoWiki_Toolbar::EDITADD, array(
-                'name'  => 'Clone Resource',
+                'name'  => 'Clone',
                 'class' => 'clone-resource'
             ));
             // ->appendButton(OntoWiki_Toolbar::EDITADD, array('name' => 'Add Property', 'class' => 'property-add'));
             $params = array(
-                    'name' => 'Delete Resource',
+                    'name' => 'Delete',
                     'url'  => $this->_config->urlBase . 'resource/delete/?r=' . urlencode((string)$resource)
             );
             $toolbar->appendButton(OntoWiki_Toolbar::SEPARATOR)
                     ->appendButton(OntoWiki_Toolbar::DELETE, $params);
 
             $toolbar->prependButton(OntoWiki_Toolbar::SEPARATOR)
-                    ->prependButton(OntoWiki_Toolbar::ADD, array('name' => 'Add Property', '+class' => 'hidden edit property-add'));
+                    ->prependButton(OntoWiki_Toolbar::ADD, array('name' => 'Add Property', '+class' => 'property-add'));
 
             $toolbar->prependButton(OntoWiki_Toolbar::SEPARATOR)
                     ->prependButton(OntoWiki_Toolbar::CANCEL, array('+class' => 'hidden'))
@@ -189,9 +188,8 @@ class ResourceController extends OntoWiki_Controller_Base {
         // add toolbar
         $this->view->placeholder('main.window.toolbar')->set($toolbar);
 
+        //show modules
         $this->addModuleContext('main.window.properties');
-
-
     }
 
     /**
@@ -201,45 +199,50 @@ class ResourceController extends OntoWiki_Controller_Base {
     public function instancesAction() {
         $store       = $this->_owApp->erfurt->getStore();
         $graph       = $this->_owApp->selectedModel;
-        $resource    = $this->_owApp->selectedResource;
-        $navigation  = $this->_owApp->navigation;
-        $translate   = $this->_owApp->translate;
 
-        //the list is setup in Ontowiki/Controller/Plugin/ListSetupHelper.php
-
+        // the list is managed by a controller plugin that catches special http-parameters
+        // in Ontowiki/Controller/Plugin/ListSetupHelper.php
+        
+        //here this list is added to the view
         $listHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('List');
-        $listName = "instances";
+        $listName = 'instances';
         if($listHelper->listExists($listName)){
             $list = $listHelper->getList($listName);
             $listHelper->addList($listName, $list, $this->view);
         } else {
             if($this->_owApp->selectedModel == null){
-                $this->_owApp->appendMessage(new OntoWiki_Message("your session timed out. select a model",  OntoWiki_Message::ERROR));
+                $this->_owApp->appendMessage(new OntoWiki_Message('your session timed out. select a model',  OntoWiki_Message::ERROR));
                 $this->_redirect($this->_config->baseUrl);
             }
             $list = new OntoWiki_Model_Instances($store, $this->_owApp->selectedModel, array());
             $listHelper->addListPermanently($listName, $list, $this->view);
         }
-
+        
+        //two usefull order
+        //$list->orderByUri();
+        //$list->setOrderProperty('http://ns.ontowiki.net/SysOnt/order');
+        
         //begin view building
         $this->view->placeholder('main.window.title')->set('Resource List');
 
+        // rdfauthor on a list is not possible yet
         // TODO: check acl
         // build toolbar
         /*
-             * toolbar disabled for 0.9.5 (reactived hopefully later :) )
+         * toolbar disabled for 0.9.5 (reactived hopefully later :) ) */
 
             if ($graph->isEditable()) {
                 $toolbar = $this->_owApp->toolbar;
-                $toolbar->appendButton(OntoWiki_Toolbar::EDIT, array('name' => 'Edit Instances', 'class' => 'edit-enable'))
-                        ->appendButton(OntoWiki_Toolbar::EDITADD, array('name' => 'Add Instance', 'class' => 'init-resource'))
-                        ->appendButton(OntoWiki_Toolbar::SEPARATOR)
-                        ->appendButton(OntoWiki_Toolbar::DELETE, array('name' => 'Delete Selected', 'class' => 'submit'))
-                        ->prependButton(OntoWiki_Toolbar::SEPARATOR)
-                        ->prependButton(OntoWiki_Toolbar::CANCEL)
-                        ->prependButton(OntoWiki_Toolbar::SAVE);
-                //$this->view->placeholder('main.window.toolbar')->set($toolbar);
+                $toolbar->appendButton(OntoWiki_Toolbar::EDITADD, array('name' => 'Add Instance', 'class' => 'init-resource'));
+                        // ->appendButton(OntoWiki_Toolbar::EDIT, array('name' => 'Edit Instances', 'class' => 'edit-enable'))
+                        // ->appendButton(OntoWiki_Toolbar::SEPARATOR)
+                        // ->appendButton(OntoWiki_Toolbar::DELETE, array('name' => 'Delete Selected', 'class' => 'submit'))
+                        // ->prependButton(OntoWiki_Toolbar::SEPARATOR)
+                        // ->prependButton(OntoWiki_Toolbar::CANCEL)
+                        // ->prependButton(OntoWiki_Toolbar::SAVE);
+                $this->view->placeholder('main.window.toolbar')->set($toolbar);
             }
+        /*
             
             $url = new OntoWiki_Url(
                 array(
