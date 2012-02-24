@@ -3,7 +3,7 @@ Section: web
 Priority: extra
 Maintainer: Sebastian Tramp <tramp@informatik.uni-leipzig.de>
 Build-Depends: debhelper (>= 7.0.50~)
-Standards-Version: 3.9.1
+Standards-Version: 3.9.2
 Homepage: http://ontowiki.net
 Vcs-Hg: https://ontowiki.googlecode.com/hg
 Vcs-Browser: http://code.google.com/p/ontowiki/source/list

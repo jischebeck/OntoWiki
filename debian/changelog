@@ -1,3 +1,11 @@
+ontowiki (0.9.6-20) lod2; urgency=low
+
+  * forward ontowiki to 4bcd852
+  * forward RDFauthor to 3072d23
+  * fix non-writable extension directory
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Fri, 24 Feb 2012 01:50:21 +0100
+
 ontowiki (0.9.6-19) lod2; urgency=low
 
   * merged new develop branches into debian package

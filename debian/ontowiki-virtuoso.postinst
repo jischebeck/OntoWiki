@@ -33,6 +33,7 @@ sudo service virtuoso-opensource-6.1 start
 
 ### APACHE CONFIG
 
+chown www-data:www-data /usr/share/ontowiki/extensions
 chown www-data:www-data /var/log/ontowiki
 chown www-data:www-data /var/cache/ontowiki
 chown www-data:www-data /etc/ontowiki/config.ini
