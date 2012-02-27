@@ -1,3 +1,11 @@
+ontowiki (0.9.6-21) lod2; urgency=low
+
+  * fix RDFauthor integration
+  * forward RDFauthor to b780680
+  * forward OntoWiki to 04b33fd
+
+ -- Sebastian Tramp <tramp@informatik.uni-leipzig.de>  Mon, 27 Feb 2012 10:42:49 +0100
+
 ontowiki (0.9.6-20) lod2; urgency=low
 
   * forward ontowiki to 4bcd852
