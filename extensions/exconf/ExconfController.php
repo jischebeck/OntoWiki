@@ -53,10 +53,14 @@ class ExconfController extends OntoWiki_Controller_Component
     const EXTENSION_NAME_PROPERTY = 'http://usefulinc.com/ns/doap#name'; //doap:name
     const EXTENSION_DESCRIPTION_PROPERTY = 'http://usefulinc.com/ns/doap#description'; //doap:description
     const EXTENSION_LATESTRELEASELOCATION_PROPERTY = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/latestZip';
+    const EXTENSION_LATESTREVISION_PROPERTY = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/latestRevision';
     const EXTENSION_RELEASE_PROPERTY = 'http://usefulinc.com/ns/doap#release';
+    const EXTENSION_PAGE_PROPERTY = 'http://usefulinc.com/ns/doap#homepage';
     const EXTENSION_RELEASE_ID_PROPERTY = 'http://usefulinc.com/ns/doap#revision';
     const EXTENSION_AUTHOR_PROPERTY = 'http://usefulinc.com/ns/doap#maintainer';
     const EXTENSION_AUTHORLABEL_PROPERTY = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/authorLabel';
+    const EXTENSION_AUTHORPAGE_PROPERTY = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/authorPage';
+    const EXTENSION_AUTHORMAIL_PROPERTY = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/authorMail';
     const EXTENSION_NS = 'http://ns.ontowiki.net/SysOnt/ExtensionConfig/';
     
     protected $use_ftp = false;
@@ -270,11 +274,7 @@ class ExconfController extends OntoWiki_Controller_Component
         $this->view->repoUrl = $repoUrl;
         $this->view->graph = $graph;
         $ow = OntoWiki::getInstance();
-        $manager        = $ow->extensionManager;
-        $configs = $manager->getExtensions();
-        $other = new stdClass();
-        $other->configs = $configs;
-        
+
         $ow->appendMessage(new OntoWiki_Message("Repository: ".$repoUrl, OntoWiki_Message::INFO));
         //$ow->appendMessage(new OntoWiki_Message("Graph: ".$graph, OntoWiki_Message::INFO));
        
@@ -289,17 +289,20 @@ class ExconfController extends OntoWiki_Controller_Component
             $adapter = new Erfurt_Store_Adapter_Sparql(array('serviceurl'=>$repoUrl, 'graphs'=>array($graph)));
             $store = new Erfurt_Store(array('adapterInstance'=>$adapter), 'sparql');
             $rdfGraphObj = new Erfurt_Rdf_Model($graph);
-            $list = new OntoWiki_Model_Instances($store, $rdfGraphObj, array());
+            $list = new OntoWiki_Model_Instances($store, $rdfGraphObj, array(STORE_USE_CACHE => false));
             $list->addTypeFilter(self::EXTENSION_CLASS, null, array('withChilds'=>false));
             $list->addShownProperty(self::EXTENSION_NAME_PROPERTY, 'name'); //internal name (folder name)
             $list->addShownProperty(self::EXTENSION_TITLE_PROPERTY, 'title'); //pretty name (label)
             $list->addShownProperty(self::EXTENSION_DESCRIPTION_PROPERTY, 'description');
+            $list->addShownProperty(self::EXTENSION_PAGE_PROPERTY, 'page');
             $list->addShownProperty(self::EXTENSION_AUTHOR_PROPERTY, 'author');
-            $list->addShownProperty(self::EXTENSION_AUTHORLABEL_PROPERTY, 'authorlabel');
-            //$list->addShownProperty(self::EXTENSION_LATESTVERSION_PROPERTY, 'latestVersion');
-            $list->addShownProperty(self::EXTENSION_LATESTRELEASELOCATION_PROPERTY, 'latestReleaseLocation');            
+            $list->addShownProperty(self::EXTENSION_AUTHORLABEL_PROPERTY, 'authorLabel');
+            $list->addShownProperty(self::EXTENSION_AUTHORPAGE_PROPERTY, 'authorPage');
+            $list->addShownProperty(self::EXTENSION_AUTHORMAIL_PROPERTY, 'authorMail');
+            $list->addShownProperty(self::EXTENSION_LATESTRELEASELOCATION_PROPERTY, 'latestZip');            
+            $list->addShownProperty(self::EXTENSION_LATESTREVISION_PROPERTY, 'latestRevision');            
 
-            $listHelper->addListPermanently($listName, $list, $this->view, 'list_extensions_main', $other);
+            $listHelper->addListPermanently($listName, $list, $this->view, 'list_extensions_main');
         }
         //echo htmlentities($list->getResourceQuery());
         //echo htmlentities($list->getQuery());
