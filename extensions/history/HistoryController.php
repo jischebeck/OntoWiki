@@ -13,15 +13,29 @@
 
 class HistoryController extends OntoWiki_Controller_Component
 {
+    
     public function feedAction()
-    {    
-        $model       = $this->_owApp->selectedModel;
-        $resource    = $this->_owApp->selectedResource;
+    {           
+        /*if($this->getRequest()->getParam("sr") !== null){
+            $r    = trim($this->getRequest()->getParam("res"),'[]');
+            $resources = explode(',', $r);
+        }
+        else
+            $resources    =  array($this->_owApp->selectedResource);*/
+        
+        if($this->getRequest()->getParam("r") !== null){
+            $resource    = $this->getRequest()->getParam("r");
+        }
+        else
+            $resource    = $this->_owApp->selectedResource;
+        
+        if($this->getRequest()->getParam("m") !== null)
+            $model       = $this->getRequest()->getParam("m");
+        else
+            $model       = $this->_owApp->selectedModel;        
+        
         $limit       = 20;
-        $rUri        = (string)$resource;
-        $rUriEncoded = urlencode($rUri);
-        $mUri        = (string)$model;
-        $mUriEncoded = urlencode($mUri);
+        $rUriEncoded = urlencode($resource);
         $translate   = $this->_owApp->translate;
         
         
@@ -41,13 +55,13 @@ class HistoryController extends OntoWiki_Controller_Component
             var_dump('versioning disabled');exit;
         }
 
-        $title = $resource->getTitle();
-        if (null == $title) {
-            $title = OntoWiki_Utils::contractNamespace($resource->getIri());
-        }
+        $title = OntoWiki_Utils::contractNamespace($resource);
         $feedTitle = sprintf($translate->_('Versions for %1$s'), $title);
-
-        $historyArray = $versioning->getHistoryForResource((string)$resource, (string)$model, 1);
+        
+        if(!$this->getRequest()->getParam("sr")){
+            var_dump('feed of lists currently not supported');exit;
+        }
+        $historyArray = $this->_getHistoryArray($resource, $versioning, 1, !$this->getRequest()->getParam("sr"), $model);
 
         $idArray = array();
         $userArray = $this->_erfurt->getUsers();
@@ -71,13 +85,14 @@ class HistoryController extends OntoWiki_Controller_Component
             }
         }
         
-        $linkUrl = $this->_config->urlBase . "history/list?r=$rUriEncoded&mUriEncoded";
-        $feedUrl = $this->_config->urlBase . "history/feed?r=$rUriEncoded&mUriEncoded";
+        $linkUrl = $this->_config->urlBase . "history/list?r=$rUriEncoded&m=".urlencode($model);
+        $feedUrl = $this->_config->urlBase . "history/feed?r=$rUriEncoded&m=".urlencode($model)."&res=".$this->getRequest()->getParam("res");  
+        
         $feed = new Zend_Feed_Writer_Feed();
         $feed->setTitle($feedTitle);
         $feed->setLink($linkUrl);
         $feed->setFeedLink($feedUrl, 'atom');
-        //$feed->addHub("http://pubsubhubbub.appspot.com/");
+        //$feed->addHub("http://localhost/casd/pubsub/hubbub");
         $feed->addAuthor(array(
             'name' => 'OntoWiki',
             'uri'  => $feedUrl
@@ -107,6 +122,11 @@ class HistoryController extends OntoWiki_Controller_Component
             $feed->addEntry($entry);
         }
         
+        $event = new Erfurt_Event('onCreateInternalFeed');
+        $event->feed = $feed;
+        $event->trigger();
+        $feed = $event->feed;
+        
         $this->_helper->layout()->disableLayout();
         $this->_helper->viewRenderer->setNoRender();
 		$this->getResponse()->setHeader("Content-Type", "application/atom+xml");
@@ -116,7 +136,7 @@ class HistoryController extends OntoWiki_Controller_Component
 		$pattern = '/updated>\n(.+?)link rel="alternate"/';
 		$replace = "updated>\n$1link";
 		$out = preg_replace($pattern, $replace, $out);
-		
+                
         echo $out;
 		
 		
@@ -172,6 +192,75 @@ class HistoryController extends OntoWiki_Controller_Component
         $this->view->formEncoding  = 'multipart/form-data';
     }
     
+    private function _getHistoryArray($resource, $versioning, $page, $islist, $model = null){
+        $translate   = $this->_owApp->translate;
+        if(!$model)
+            $model       = $this->_owApp->selectedModel;        
+        else
+            $model = new Erfurt_Owl_Model($model, $model);
+        // setting default title
+        if(is_object($resource))
+            $title = $resource->getTitle() ? $resource->getTitle() : OntoWiki_Utils::contractNamespace($resource->getIri());
+        else
+            $title = $resource;
+        // setting if class or instances
+        if ($islist) {
+            $windowTitle = $translate->_('Versions for elements of the list');
+
+            $listHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('List');
+            $listName = "instances";
+            $listHelper->listExists($listName);
+            if($listHelper->listExists($listName)){
+                $list = $listHelper->getList($listName);
+            } else {
+                 $this->_owApp->appendMessage(
+                    new OntoWiki_Message('something went wrong with the list of instances', OntoWiki_Message::ERROR)
+            );
+            }
+
+            $query = clone $list->getResourceQuery();
+            #var_dump((string) $query);exit;
+            $query->setLimit(0);
+            $query->setOffset(0);
+            //echo htmlentities($query);
+
+            $results = $model->sparqlQuery($query);
+            $resourceVar = $list->getResourceVar()->getName();
+
+            $resources = array();
+            foreach ($results as $result) {
+                $resources[] = $result[$resourceVar];
+            }
+            //var_dump($resources);
+            
+            $historyArray = $versioning->getHistoryForResourceList(
+                $resources,
+                (string) $model,
+                $page
+            );
+        } else {
+            $windowTitle = sprintf($translate->_('Versions for %1$s'), $title);
+
+            $historyArray = $versioning->getHistoryForResource(
+                (string) $resource,
+                (string) $model,
+                $page
+            );
+        }
+        $this->view->placeholder('main.window.title')->set($windowTitle);
+        return $historyArray;
+    }
+    
+    public function getFeedUrl($resource, $model, $singleResource = true){
+        #$feedUrl = $this->_config->urlBase . "history/feed?r=$rUriEncoded&m=".urlencode($model)."&res=".$this->getRequest()->getParam("res");  
+        #'url' => $this->_config->urlBase . 'history/feed?sr='.$sr.'&r='.  urlencode($this->_owApp->selectedResource).'&m='.  urlencode((string) $model))
+        return self::getFeedUrlStatic($this->_config->urlBase, $resource, $model, $singleResource);
+    }
+    
+    public static function getFeedUrlStatic($urlbase, $resource, $model, $singleResource = true){
+        return $urlbase . 'history/feed?sr='.$singleResource.'&r='.  urlencode($resource).'&m='.  urlencode($model);
+    }
+    
 
     /**
      *  Listing history for selected Resource
@@ -181,14 +270,14 @@ class HistoryController extends OntoWiki_Controller_Component
         $model       = $this->_owApp->selectedModel;
         $translate   = $this->_owApp->translate;
         $store       = $this->_erfurt->getStore();
-        $resource    = $this->_owApp->selectedResource;
+        $resource    = $this->_owApp->selectedResource;        
         $ac          = $this->_erfurt->getAc();
         $params      = $this->_request->getParams();
         $limit       = 20;
         
         $rUriEncoded = urlencode((string)$resource);
         $mUriEncoded = urlencode((string)$model);
-        $feedUrl = $this->_config->urlBase . "history/feed?r=$rUriEncoded&mUriEncoded";
+        $feedUrl = $this->_config->urlBase . "history/feed?r=$rUriEncoded&m=".$mUriEncoded;
         
         $this->view->headLink()->setAlternate($feedUrl, 'application/atom+xml', 'History Feed');
 
@@ -214,55 +303,10 @@ class HistoryController extends OntoWiki_Controller_Component
 
         $singleResource = true;
         // setting if class or instances
-        if ($this->_owApp->lastRoute === 'instances') {
-            // setting default title
-            $title = $resource->getTitle() ? $resource->getTitle() : OntoWiki_Utils::contractNamespace($resource->getIri());
-            $windowTitle = $translate->_('Versions for elements of the list');
-
-            $listHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('List');
-            $listName = "instances";
-            if($listHelper->listExists($listName)){
-                $list = $listHelper->getList($listName);
-            } else {
-                 $this->_owApp->appendMessage(
-                    new OntoWiki_Message('something went wrong with the list of instances', OntoWiki_Message::ERROR)
-            );
-            }
-
-            $query = clone $list->getResourceQuery();
-            $query->setLimit(0);
-            $query->setOffset(0);
-            //echo htmlentities($query);
-
-            $results = $model->sparqlQuery($query);
-            $resourceVar = $list->getResourceVar()->getName();
-
-            $resources = array();
-            foreach ($results as $result) {
-                $resources[] = $result[$resourceVar];
-            }
-            //var_dump($resources);
-            
-            $historyArray = $versioning->getHistoryForResourceList(
-                $resources,
-                (string) $this->_owApp->selectedModel,
-                $page
-            );
-            //var_dump($historyArray);
-            
-            $singleResource = false;
-        } else {
-            // setting default title
-            $title = $resource->getTitle() ? $resource->getTitle() : OntoWiki_Utils::contractNamespace($resource->getIri());
-            $windowTitle = sprintf($translate->_('Versions for %1$s'), $title);
-
-            $historyArray = $versioning->getHistoryForResource(
-                (string)$resource,
-                (string)$this->_owApp->selectedModel,
-                $page
-            );
-        }
-
+        if ($this->_owApp->lastRoute === 'instances')
+            $singleResource = false;        
+        $historyArray = $this->_getHistoryArray($resource, $versioning, $page, !$singleResource);
+        
         if (sizeof($historyArray) == ( $limit + 1 ) ) {
             $count = $page * $limit + 1;
             unset($historyArray[$limit]);
@@ -306,19 +350,30 @@ class HistoryController extends OntoWiki_Controller_Component
                 )
             );
         }
+        
+       if($singleResource)
+           $sr = '1';
+       else
+           $sr = '0';
+        $toolbar = $this->_owApp->toolbar;
+        $toolbar->appendButton(
+                OntoWiki_Toolbar::EXPORT,
+                #array('name' => $translate->_('Generate feed'), 'id' => 'feed', 'url' => $this->_config->urlBase . 'history/feed?sr='.$sr.'&r='.  urlencode($this->_owApp->selectedResource).'&m='.  urlencode((string) $model))
+                #getFeedUrl(string $resource, string $model, $singleResource = false)
+                array('name' => $translate->_('Generate feed'), 'id' => 'feed', 'url' => $this->getFeedUrl($this->_owApp->selectedResource, (string) $model,(boolean) $sr))
+                );
 
         if ($this->_erfurt->getAc()->isActionAllowed('Rollback')) {
             $this->view->rollbackAllowed = true;
             // adding submit button for rollback-action
-            $toolbar = $this->_owApp->toolbar;
             $toolbar->appendButton(
                 OntoWiki_Toolbar::SUBMIT,
                 array('name' => $translate->_('Rollback changes'), 'id' => 'history-rollback')
             );
-            $this->view->placeholder('main.window.toolbar')->set($toolbar);
         } else {
             $this->view->rollbackAllowed = false;
         }
+        $this->view->placeholder('main.window.toolbar')->set($toolbar);
 
         // paging
         
@@ -328,9 +383,7 @@ class HistoryController extends OntoWiki_Controller_Component
 
         // setting view variables
         
-        $url = new OntoWiki_Url(array('controller' => 'history', 'action' => 'rollback'));
-
-        $this->view->placeholder('main.window.title')->set($windowTitle);
+        $url = new OntoWiki_Url(array('controller' => 'history', 'action' => 'rollback'));        
 
         $this->view->formActionUrl = (string) $url;
         $this->view->formMethod    = 'post';

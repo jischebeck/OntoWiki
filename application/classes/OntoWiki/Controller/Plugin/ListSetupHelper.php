@@ -43,10 +43,11 @@ class OntoWiki_Controller_Plugin_ListSetupHelper extends Zend_Controller_Plugin_
                 isset($request->limit)
             )
         ) {
+            
             $frontController = Zend_Controller_Front::getInstance();
             $store           = $ontoWiki->erfurt->getStore();
             $resource = $ontoWiki->selectedResource;
-            $session = $ontoWiki->session;
+            $session = $ontoWiki->session;            
 
             // when switching to another class:
             // reset session vars (regarding the list)
@@ -189,6 +190,7 @@ class OntoWiki_Controller_Plugin_ListSetupHelper extends Zend_Controller_Plugin_
                                     isset($filter->id) ? $filter->id : null
                                 );
                             } else if($filter->mode == 'rdfsclass') {
+                                $ontoWiki->selectedResource = new OntoWiki_Resource($filter->rdfsclass, $ontoWiki->selectedModel);                                
                                 $list->addTypeFilter(
                                     $filter->rdfsclass,
                                     isset($filter->id) ? $filter->id : null

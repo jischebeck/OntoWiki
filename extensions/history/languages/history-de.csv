@@ -10,4 +10,5 @@ user;Benutzer
 timestamp;Zeitstempel
 action-type;Aktionstyp
 Rollback changes;"Änderungen wiederherstellen"
+Generate feed; "Feed generieren"
 Versions for %1$s;Versionen von %1$s
