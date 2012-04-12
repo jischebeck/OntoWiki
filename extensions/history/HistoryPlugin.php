@@ -50,22 +50,27 @@ class HistoryPlugin extends OntoWiki_Plugin
      */
     public function beforeExportResource($event)
     {
-        $propertyUri = 'http://purl.org/net/dssn/syncFeed';
-
-        $r = $event->resource;
-        $additional = array();
-
         $owApp = OntoWiki::getInstance();
-        $url = $owApp->config->urlBase . 'history/feed/?r=' . (string) $r;
 
-        $additional[$r] = array();
-        $additional[$r][$propertyUri] = array();
-        $additional[$r][$propertyUri][] = array(
-            'value' => $url,
-            'type' => 'uri'
+        // this is the event value if there are other plugins before
+        $prevModel = $event->getValue();
+        // throw away non memory model values OR use the given one if valid
+        if (is_object($prevModel) && get_class($prevModel) == 'Erfurt_Rdf_MemoryModel') {
+            $newModel = $prevModel;
+        } else {
+            $newModel = new Erfurt_Rdf_MemoryModel();
+        }
+
+        // prepare the statement URIs
+        $subjectUri  = (string) $event->resource;
+        $propertyUri = $this->_privateConfig->syncfeedProperty;
+        $objectUri   = $owApp->config->urlBase . 'history/feed/?r=' . $subjectUri;
+
+        $newModel->addRelation(
+            $subjectUri, $propertyUri, $objectUri
         );
 
-        return $additional;
+        return $newModel;
     }
 
     private function _log($msg)
