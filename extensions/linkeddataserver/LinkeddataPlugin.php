@@ -142,6 +142,7 @@ class LinkeddataPlugin extends OntoWiki_Plugin
             // Give plugins a chance to do something before redirecting.
             $event = new Erfurt_Event('onBeforeLinkedDataRedirect');
             $event->response = $response;
+            $event->resource = $uri;
             $event->trigger();
 
             // Give plugins a chance to handle the redirection instead of doing it here.

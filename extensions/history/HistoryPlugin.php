@@ -46,12 +46,24 @@ class HistoryPlugin extends OntoWiki_Plugin
     }
 
     /*
+     * used to add a special http response header
+     */
+    public function onBeforeLinkedDataRedirect($event)
+    {
+        if ($event->response === null) {
+            return;
+        }
+
+        $url      = $this->_getSyncFeed((string) $event->resource);
+        $response = $event->response;
+        $response->setHeader('X-Syncfeed', $url, true);
+    }
+
+    /*
      * used on export event to add a statement to the export
      */
     public function beforeExportResource($event)
     {
-        $owApp = OntoWiki::getInstance();
-
         // this is the event value if there are other plugins before
         $prevModel = $event->getValue();
         // throw away non memory model values OR use the given one if valid
@@ -64,13 +76,22 @@ class HistoryPlugin extends OntoWiki_Plugin
         // prepare the statement URIs
         $subjectUri  = (string) $event->resource;
         $propertyUri = $this->_privateConfig->syncfeedProperty;
-        $objectUri   = $owApp->config->urlBase . 'history/feed/?r=' . $subjectUri;
+        $objectUri   = $this->_getSyncFeed((string) $subjectUri);
 
         $newModel->addRelation(
             $subjectUri, $propertyUri, $objectUri
         );
 
         return $newModel;
+    }
+
+    /*
+     * get a feed URL for a resource URI
+     */
+    private function _getSyncFeed($resource)
+    {
+        $owApp = OntoWiki::getInstance();
+        return $owApp->config->urlBase . 'history/feed/?r=' . $resource;
     }
 
     private function _log($msg)
