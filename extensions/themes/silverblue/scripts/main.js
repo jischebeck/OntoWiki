@@ -24,6 +24,41 @@ tempHrefs = new Array();
  * core css assignments
  */
 $(document).ready(function() {
+    // Object.keys support in older environments that do not natively support it
+    if (!Object.keys) {
+        Object.keys = (function () {
+            var hasOwnProperty = Object.prototype.hasOwnProperty,
+                hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+                dontEnums = [
+                  'toString',
+                  'toLocaleString',
+                  'valueOf',
+                  'hasOwnProperty',
+                  'isPrototypeOf',
+                  'propertyIsEnumerable',
+                  'constructor'
+                ],
+                dontEnumsLength = dontEnums.length
+
+            return function (obj) {
+                if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object')
+
+                var result = []
+
+                for (var prop in obj) {
+                    if (hasOwnProperty.call(obj, prop)) result.push(prop)
+                }
+
+                if (hasDontEnumBug) {
+                    for (var i=0; i < dontEnumsLength; i++) {
+                        if (hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i])
+                    }
+                }
+              return result
+            }
+        })()
+    };
+
     // the body gets a new class to indicate that javascript is turned on
     $('body').removeClass('javascript-off').addClass('javascript-on');
 
@@ -70,7 +105,7 @@ $(document).ready(function() {
             }});
     
     // resize separator when all ajax crap is loaded
-    window.setTimeout(function () {        
+    window.setTimeout(function () {
         $('.section-sidewindows .resizer-horizontal').height(
             Math.max(
                 $(document).height(),
@@ -79,12 +114,32 @@ $(document).ready(function() {
                 document.documentElement.clientHeight
             ) + 'px');
     }, 750);
-    
+
     if (typeof sectionRatio != 'undefined') {
         setSectionRatio(sectionRatio);
     }
-    
+
     /* list selection */
+    /* bind to selection events */
+    $('body').bind(
+        'ontowiki.selection.changed',
+        function(event, data)
+        {
+            // select event
+            $('.list-selected').removeClass('list-selected'); // should not add class in the click function
+            $('table.resource-list > tbody > tr').each(
+                function(key)
+                {
+                    var pos = $.inArray($(this).children('td').children('a').attr('about'), data);
+                    if (pos >= 0) {
+                        $(this).addClass('list-selected');
+                    }
+                }
+            );
+        }
+    );
+
+    /* trigger selection events */
     $('table.resource-list > tbody > tr').live('click', function(e) {
         var selectee     = $(this);
         var selectionURI = $(this).children('td').children('a').attr('about');
@@ -103,7 +158,7 @@ $(document).ready(function() {
         if (typeof OntoWiki.selectedResources == 'undefined') {
             OntoWiki.selectedResources = [];
         }
-        
+
         if (!selectee.hasClass('list-selected')) { // select a resource
             // TODO: check for macos UI compability
             if (e.ctrlKey) {
@@ -114,14 +169,11 @@ $(document).ready(function() {
                 // not implemented yet
             } else {
                 // normal click on unselected means deselect all and select this one
-                // deselect all resources
-                $('.list-selected').removeClass('list-selected');
                 // purge the container array
                 OntoWiki.selectedResources = [];
             }
 
             // add this resource
-            selectee.addClass('list-selected');
             OntoWiki.selectedResources.push(selectionURI);
             // event for most recent selection
             $('body').trigger('ontowiki.resource.selected', [selectionURI]);
@@ -129,7 +181,6 @@ $(document).ready(function() {
             // TODO: check for macos UI compability
             if (e.ctrlKey) {
                 // ctrl+click on selected means deselect this one
-                selectee.removeClass('list-selected');
                 var pos = $.inArray(selectionURI, OntoWiki.selectedResources);
                 OntoWiki.selectedResources.splice(pos, 1);
             } else if (e.shiftKey) {
@@ -137,8 +188,6 @@ $(document).ready(function() {
                 // not implemented yet
             } else {
                 // normal click on selected means deselect all
-                // deselect all resources
-                $('.list-selected').removeClass('list-selected');
                 // purge the container array
                 OntoWiki.selectedResources = [];
             }
@@ -146,11 +195,12 @@ $(document).ready(function() {
             // event for most recent unselection
             $('body').trigger('ontowiki.resource.unselected', [selectionURI]);
         }
-        
+
         // event for all selected
         $('body').trigger('ontowiki.selection.changed', [OntoWiki.selectedResources]);
     });
-    
+    /* END list selection */
+
     $('body').bind('ontowiki.resource-list.reloaded', function() {
         // synchronize selection with list style
         $('.resource-list tr').each(function() {
@@ -209,26 +259,27 @@ $(document).ready(function() {
      *  simulate Safari behaviour for other browsers
      *  on return/enter, submit the form
      */
-    if (!$.browser.safari) {
-        $('.submitOnEnter').keypress(function(event) {
-            // return pressed
-            if (event.target.tagName.toLowerCase() != 'textarea' && event.which == 13) {
-                $(this).parents('form').submit();
-            }
-        });
-    }
+    $('.submitOnEnter').keypress(function(event) {
+        // return pressed
+        if (event.target.tagName.toLowerCase() != 'textarea' && event.which == 13) {
+            $(this).parents('form').submit();
+        }
+    });
+    
     /*
-     *  on press enter, this type of textbox looses focus and gives it to the next textfield
+     *  on press enter, this type of textbox looses focus and gives it to the next element of the same type
      */
     $('.focusNextOnEnter').keypress(function(event) {
         // return pressed
         if (event.target.tagName.toLowerCase() != 'textarea' && event.which == 13) {
             var me = $(this)
-            var next = me.next();
-            if(next.get(0).tagName.toLowerCase() == me.get(0).tagName.toLowerCase()){
+            var meType = me.get(0).tagName.toLowerCase()
+            var next = me.next(); //next element
+            if(next.get(0).tagName.toLowerCase() == meType){
                 next.focus();
             } else {
-                var next2 = me.parent().next().find('>'+me.get(0).tagName.toLowerCase()+':first')
+                // if thats not of the same type, go to "parent and "cousin""
+                var next2 = me.parent().next().find('>'+meType+':first')
                 if (next2.length != 0){
                     next2.focus();
                 } 
@@ -243,16 +294,22 @@ $(document).ready(function() {
             document.forms[$(this).attr('name')].reset();
         })
     });
-    
+
     // init new resource based on type
-    $('.init-resource').click(function() {
-        var type       = $(this).closest('.window').find('*[typeof]').eq(0).attr('typeof');
-        var namespace  = type.split(':')[0];
-        var instance = type.split(':')[1];
-        var namespaceUri = $(this).closest('.window').find('table').attr('xmlns:'+namespace);
-        createInstanceFromClassURI(namespaceUri+instance);
+    $('.init-resource').click(function(event) {
+        // parse .resource-list and query for all types
+        var types = $('.resource-list').rdf()
+                                       .where('?type a rdfs:Class')
+                                       .where('?type rdfs:label ?value')
+                                       .dump();
+
+        if (Object.keys(types).length == 1) {
+            createInstanceFromClassURI(Object.keys(types)[0]);
+        } else {
+            showAddInstanceMenu(event, types);
+        } 
     });
-    
+
     $('.edit.save').click(function() {
         RDFauthor.commit();
     });
@@ -551,6 +608,10 @@ $(document).ready(function() {
         $(this).createResourceMenuToggle();
     });
 
+    $('.init-resource').livequery(function() {
+        $(this).createResourceMenuToggle();
+    });
+
     // All RDFa elements with @about or @resource attribute are resources
     $('*[about]').livequery(function() {
         $(this).addClass('Resource');
@@ -603,7 +664,7 @@ $(document).ready(function() {
         }).mouseout(function() {
             showHref($(this).parent())
         });
-    })
+    });
     
     var loadChildren = function(li) {
         var ul;
