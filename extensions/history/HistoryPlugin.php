@@ -17,6 +17,15 @@
  */
 class HistoryPlugin extends OntoWiki_Plugin
 {
+    
+    public function onPropertiesAction($event){
+        $translate = OntoWiki::getInstance()->translate;
+        $owApp = OntoWiki::getInstance();
+        
+        $menu = OntoWiki_Menu_Registry::getInstance()->getMenu('resource');
+        $menu->appendEntry(OntoWiki_Menu::SEPARATOR);
+        $menu->appendEntry($translate->_('Subscribe for Resource Feed'), array('url' => $owApp->getUrlBase().'history/subscribe?r='.urlencode($event->uri)));
+    }
 
     public function onAddStatement(Erfurt_Event $event)
     {
@@ -26,13 +35,13 @@ class HistoryPlugin extends OntoWiki_Plugin
     public function onAddMultipleStatements(Erfurt_Event $event)
     {
         $this->_log("histories onAddMultipleStatements");
-        /*$urlBase = OntoWiki::getInstance()->getUrlBase();
+        $urlBase = OntoWiki::getInstance()->getUrlBase();
         $subEvent = new Erfurt_Event('onInternalFeedDidChange');
         foreach($event->statements as $resource => $content){
             require_once 'HistoryController.php';
-            $subEvent->feedUrl = HistoryController::getFeedUrlStatic($urlBase, $resource, $event->graphUri);
+            $subEvent->feedUrl = HistoryController::getFeedUrlStatic($urlBase, $resource, $this->_privateConfig->resourceParamName);
             $subEvent->trigger();
-        }*/
+        }
     }
 
     public function onDeleteMatchingStatements(Erfurt_Event $event)
@@ -43,6 +52,36 @@ class HistoryPlugin extends OntoWiki_Plugin
     public function onDeleteMultipleStatements(Erfurt_Event $event)
     {
         $this->_log("histories onDeleteMultipleStatements");
+    }
+    
+    public function onExternalFeedDidChange(Erfurt_Event $event){
+        $this->_log('processing payload: ');
+        
+        try{
+            // creates a feed object from the feed string
+            $this->_privateConfig->__set('timeout', 50);
+            $feed = new Zend_Feed_Atom(null, $event->feedData);
+            
+            // loads the resource 
+            $tmp = explode($this->_privateConfig->resourceParamName.'=', $feed->link('self'));
+            $resourceUri = urldecode($tmp[1]);
+            
+            // 1. Retrieve HTTP-Header and check if the x-syncfeed url is the same as the url from the feed
+            $headers = get_headers($resourceUri, 1);
+            if (!is_array($headers)) {
+                return;
+            }
+            if (isset($headers['X-Syncfeed'])) {
+                $this->_log('feed is syncfeed (historyfeed)');
+            }
+            else
+                return;
+        }
+        catch (Exception $e){
+            $this->_log($e->getMessage());
+            $this->_log("in feed: ");
+            $this->_log(print_r($event->feedData,true));
+        }
     }
 
     /*
@@ -91,7 +130,7 @@ class HistoryPlugin extends OntoWiki_Plugin
     private function _getSyncFeed($resource)
     {
         $owApp = OntoWiki::getInstance();
-        return $owApp->config->urlBase . 'history/feed/?r=' . $resource;
+        return $owApp->config->urlBase . 'history/feed?'.$this->_privateConfig->resourceParamName.'=' . urlencode($resource);
     }
 
     private function _log($msg)
