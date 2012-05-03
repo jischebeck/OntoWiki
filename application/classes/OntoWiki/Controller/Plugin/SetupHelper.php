@@ -54,11 +54,7 @@ class OntoWiki_Controller_Plugin_SetupHelper extends Zend_Controller_Plugin_Abst
             // instantiate model if parameter passed
             if (isset($request->m)) {
                 try {
-                    $useAc = true;
-                    if(strpos($request->getParam('controller'), 'history') !== false &&
-                       strpos($request->getParam('action'), 'feed') !== false)
-                            $useAc = false;
-                    $model = $store->getModel($request->getParam('m', null, false), $useAc);
+                    $model = $store->getModel($request->getParam('m', null, false));
                     $ontoWiki->selectedModel = $model;
                 } catch (Erfurt_Store_Exception $e) {
                     // When no user is given (Anoymous) give the requesting party a chance to authenticate.
