@@ -395,15 +395,13 @@ class HistoryController extends OntoWiki_Controller_Component
 
             $subscription = $this->_privateConfig->subscriptionClass.time();
 
-            $statements = array();
             $statements = new Erfurt_Rdf_MemoryModel;
             $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $feedUrl);
             $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
-
             $statements->addRelation($get['r'], $this->_privateConfig->subscriptionPredicate, $subscription);
             
-            # TODO!!
-            #$store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements, false);
+            $store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements->getStatements(), false);
+            
 
             var_dump('Local subscription added'); # TODO!
         }
