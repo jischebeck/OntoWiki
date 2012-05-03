@@ -268,34 +268,7 @@ class LinkeddataPlugin extends OntoWiki_Plugin
     private function _getFirstReadableGraphForUri($uri)
     {
         $store = OntoWiki::getInstance()->erfurt->getStore();
-        try {
-            $result = $store->getGraphsUsingResource($uri, false);
-
-            if ($result) {
-                // get source graph
-                $allowedGraph = null;
-                $ac = Erfurt_App::getInstance()->getAc();
-                foreach ($result as $g) {
-                    if ($ac->isModelAllowed('view', $g)) {
-                        $allowedGraph = $g;
-                        break;
-                    }
-                }
-
-                if (null === $allowedGraph) {
-                    // We use the first matching graph. The user is redirected and the next request
-                    // has to decide, whether user is allowed to view or not. (Workaround since there are problems
-                    // with linkeddata and https).
-                    return $result[0];
-                } else {
-                    return $allowedGraph;
-                }
-            } else {
-                return null;
-            }
-        } catch (Excpetion $e) {
-            return null;
-        }
+        return $store->getFirstReadableGraphForUri($uri);
     }
 
     private function _isLinkedDataUri($uri)
