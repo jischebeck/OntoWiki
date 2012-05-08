@@ -104,16 +104,19 @@ class HistoryController extends OntoWiki_Controller_Component
             $entry->setDateModified($historyItem['tstamp']);
             $entry->setDateCreated($historyItem['tstamp']);
             $entry->setDescription($title);
-
+            
 			$content = "";
-			$result = $this->getActionTriple($historyItem['id']);
+			$result = $this->getActionTriple($historyItem['id'], false, $resource, $model);
 			$content .= json_encode($result);	
 
             $entry->setContent( htmlentities($content) );
+            
+            $this->_log('history item: '.print_r($historyItem,true));
+            $this->_log('result triple: '.print_r($result,true));
+            $this->_log('entry content: '.print_r($entry->getContent(),true));    
 
             $feed->addEntry($entry);
         }
-
         $event = new Erfurt_Event('onCreateInternalFeed');
         $event->feed = $feed;
         $event->trigger();
@@ -125,6 +128,7 @@ class HistoryController extends OntoWiki_Controller_Component
 
         $out = $feed->export('atom');
 
+#$this->_log('feed: '.print_r($out,true));
 		$pattern = '/updated>\n(.+?)link rel="alternate"/';
 		$replace = "updated>\n$1link";
 		$out = preg_replace($pattern, $replace, $out);
@@ -398,7 +402,9 @@ class HistoryController extends OntoWiki_Controller_Component
             $statements = new Erfurt_Rdf_MemoryModel;
             $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $feedUrl);
             $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
-            $statements->addRelation($get['r'], $this->_privateConfig->subscriptionPredicate, $subscription);
+            $statements->addRelation($subscription, $this->_privateConfig->resourcePredicate, $get['r']);
+            $statements->addRelation($subscription, $this->_privateConfig->modelPredicate, $get['m']);
+            $statements->addRelation($subscription, $this->_privateConfig->typePredicate, $this->_privateConfig->subscriptionClass);
             
             $store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements->getStatements(), false);
             
@@ -664,17 +670,42 @@ class HistoryController extends OntoWiki_Controller_Component
 
     private function toFlatArray($serializedString)
     {
+        $statement = new Erfurt_Rdf_MemoryModel();        
         $walkArray = unserialize($serializedString);
         foreach ($walkArray as $subject => $a) {
             foreach ($a as $predicate => $b) {
-                foreach ($b as $object) {
+                foreach ($b as $object) {                    
                     return array($subject, $predicate, $object['value']);
                 }
             }
         }
     }
+    
+    private function toRdfXml($serializedString, $resource, $model)
+    {
+        $statement = new Erfurt_Rdf_MemoryModel();        
+        $walkArray = unserialize($serializedString);
+        $subject = key($walkArray);
+        $predicate = key($walkArray[$subject]);
+        $object = $walkArray[$subject][$predicate][0];
+        $this->_log('s: '.print_r($subject,true));
+        $this->_log('p: '.print_r($predicate,true));
+        $this->_log('o: '.print_r($object,true));
+        if($object['type'] === 'uri')
+            $statement->addRelation($subject, $predicate, $object['value']);
+        else
+            $statement->addAttribute ($subject, $predicate, $object['value']);
+        #$this->_log('addst: '.print_r($statement->getStatements(),true));
+        return $statement->getStatements();
+        #$rdfxml = $this->serialize($resource, $model, false, true, $addedStatements);        
+        #$this->_log('rdfxml: '.print_r($rdfxml,true));
+    }
 
-    private function getActionTriple($actionID)
+    /*
+     * param view   the viewing (history/list) expects another format then the 
+     *              machine readable atom (history/feed)
+     */
+    private function getActionTriple($actionID, $view = true, $resource = null, $model = null)
     {
             // enabling versioning
         $versioning = $this->_erfurt->getVersioning();
@@ -688,11 +719,20 @@ class HistoryController extends OntoWiki_Controller_Component
         foreach ($detailsArray as $entry) {
             $type = (int) $entry['action_type'];
             if ( $type        === Erfurt_Versioning::STATEMENT_ADDED ) {
-                $stAddArray[]   = $this->toFlatArray($entry['statement_hash']);
+                if($view)
+                    $stAddArray[]   = $this->toFlatArray($entry['statement_hash']);
+                else
+                    $stAddArray[]   = $this->toRdfXml($entry['statement_hash'], $resource, $model);
             } elseif ( $type  === Erfurt_Versioning::STATEMENT_REMOVED ) {
-                $stDelArray[]   = $this->toFlatArray($entry['statement_hash']);
+                if($view)
+                    $stDelArray[]   = $this->toFlatArray($entry['statement_hash']);
+                else
+                    $stDelArray[]   = $this->toRdfXml($entry['statement_hash'], $resource, $model);
             } else {
-                $stOtherArray[] = $this->toFlatArray($entry['statement_hash']);
+                if($view)
+                    $stOtherArray[] = $this->toFlatArray($entry['statement_hash']);
+                else
+                    $stOtherArray[]   = $this->toRdfXml($entry['statement_hash'], $resource, $model);
             }
         }
 

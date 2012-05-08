@@ -24,7 +24,7 @@ class HistoryPlugin extends OntoWiki_Plugin
         
         $menu = OntoWiki_Menu_Registry::getInstance()->getMenu('resource');
         $menu->appendEntry(OntoWiki_Menu::SEPARATOR);
-        $menu->appendEntry($translate->_('Subscribe for Resource Feed'), array('url' => $owApp->getUrlBase().'history/subscribe?r='.urlencode($event->uri)));
+        $menu->appendEntry($translate->_('Subscribe for Resource Feed'), array('url' => $owApp->getUrlBase().'history/subscribe?r='.urlencode($event->uri).'&m='.urlencode($event->graph)));
     }
 
     public function onAddStatement(Erfurt_Event $event)
@@ -56,6 +56,7 @@ class HistoryPlugin extends OntoWiki_Plugin
     
     public function onExternalFeedDidChange(Erfurt_Event $event){
         $this->_log('processing payload: ');
+        $tmpGraphUri = 'http://faxpsubu/casd/';
         
         try{
             // creates a feed object from the feed string
@@ -72,7 +73,48 @@ class HistoryPlugin extends OntoWiki_Plugin
                 return;
             }
             if (isset($headers['X-Syncfeed'])) {
-                $this->_log('feed is syncfeed (historyfeed)');
+                $this->_log('feed is syncfeed (historyfeed)');    
+                $tasks = array();
+                foreach ($feed->entries as $entry) {
+                    $content = json_decode($entry->content->getDOM()->nodeValue, true);                    
+                    $added = $content['added'];
+                    $deleted = $content['deleted'];                    
+                    if(isset($added) && sizeof($added) > 0)
+                        foreach($added as $add) {
+                            #$this->_log("to be added: ".print_r($add,true));
+                            $task = array(
+                                'type'    => 0,
+                                'content' => $add,
+                                'id'      => $content['id']
+                            );
+                            $tasks[] = $task;
+                        }
+                    if(isset($deleted) && sizeof($deleted) > 0)
+                        foreach($deleted as $delete) {
+                            #$this->_log("to be deleted: ".print_r($delete,true));
+                            $task = array(
+                                'type'    => 1,
+                                'content' => $delete,
+                                'id'      => $content['id']
+                            );
+                            $tasks[] = $task;
+                        }
+                }
+                $tasks = array_reverse($tasks);
+                $store = Erfurt_App::getInstance()->getStore();
+                    
+                foreach($tasks as $task) {
+                    $this->_log("--------------------------");
+                    $this->_log("entry id: ".$task['id']);
+                    $this->_log('to be '.($task['type'] ? 'deleted' : 'added').': '.print_r($task['content'],true));
+                    if($task['type'])
+                        $store->deleteMultipleStatements($tmpGraphUri, $task['content']);
+                    else
+                        $store->addMultipleStatements ($tmpGraphUri, $task['content']);
+                        
+                    #foreach($task['content'] as $subject => $triple)                        
+                    #    $this->_log('triple for subject = '.$subject.' : '.print_r($triple,true));
+                }
             }
             else
                 return;
