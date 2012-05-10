@@ -35,13 +35,7 @@ class HistoryPlugin extends OntoWiki_Plugin
     public function onAddMultipleStatements(Erfurt_Event $event)
     {
         $this->_log("histories onAddMultipleStatements");
-        $urlBase = OntoWiki::getInstance()->getUrlBase();
-        $subEvent = new Erfurt_Event('onInternalFeedDidChange');
-        foreach($event->statements as $resource => $content){
-            require_once 'HistoryController.php';
-            $subEvent->feedUrl = HistoryController::getFeedUrlStatic($urlBase, $resource, $this->_privateConfig->resourceParamName);
-            $subEvent->trigger();
-        }
+        $this->_triggerInternalFeedChange($event->statements);        
     }
 
     public function onDeleteMatchingStatements(Erfurt_Event $event)
@@ -52,11 +46,25 @@ class HistoryPlugin extends OntoWiki_Plugin
     public function onDeleteMultipleStatements(Erfurt_Event $event)
     {
         $this->_log("histories onDeleteMultipleStatements");
+        $this->_triggerInternalFeedChange($event->statements);
+    }
+    
+    private function _triggerInternalFeedChange($statements){        
+        $urlBase = OntoWiki::getInstance()->getUrlBase();
+        $subEvent = new Erfurt_Event('onInternalFeedDidChange');
+        foreach($statements as $resource => $content){
+            require_once 'HistoryController.php';
+            $subEvent->feedUrl = HistoryController::getFeedUrlStatic($urlBase, $resource, $this->_privateConfig->resourceParamName);
+            $subEvent->trigger();
+        }
+        
     }
     
     public function onExternalFeedDidChange(Erfurt_Event $event){
         $this->_log('processing payload: ');
+        #!! CHANGE - START !! enviroment dependent
         $tmpGraphUri = 'http://faxpsubu/casd/';
+        #!! CHANGE - END !! 
         
         try{
             // creates a feed object from the feed string
