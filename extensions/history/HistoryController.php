@@ -381,7 +381,7 @@ class HistoryController extends OntoWiki_Controller_Component
                     'timeout' => 3
                 ));
         $client->setMethod('GET');
-        $client->setParameterGet('topic', urlencode($feedUrl));
+        $client->setParameterGet('topic', $feedUrl);
         $client->setParameterGet('r', $get['r']);
         $client->setParameterGet('m', $get['m']);
         $response = $client->request();
