@@ -376,6 +376,18 @@ class HistoryController extends OntoWiki_Controller_Component
         $get = $this->_request->getQuery();
         $feedUrl = $this->_discoverFeedURL($get['r']);
 
+        $client = Erfurt_App::getInstance()->getHttpClient($this->_privateConfig->subscribeUrl, array(
+                    'maxredirects' => 0,
+                    'timeout' => 3
+                ));
+        $client->setMethod('GET');
+        $client->setParameterGet('topic', urlencode($feedUrl));
+        $client->setParameterGet('r', $get['r']);
+        $client->setParameterGet('m', $get['m']);
+        $response = $client->request();
+        $this->_log('subscribe response: '.print_r($response,true));
+        
+        /*
         $subscribeUrl = $this->_getSubscribeUrlFromFeed($feedUrl);
 
         $client = Erfurt_App::getInstance()->getHttpClient($subscribeUrl, array(
@@ -393,7 +405,10 @@ class HistoryController extends OntoWiki_Controller_Component
         # TODO: async subscription
         $response = $client->request();
 
-        if ($response->getStatus() === 204) {
+        if ($response->getStatus() === 204) {            
+            # TODO: async subscription
+            $response = $client->request();
+                
             # sync subscription
             $store = Erfurt_App::getInstance()->getStore();
 
@@ -417,7 +432,7 @@ class HistoryController extends OntoWiki_Controller_Component
         }
         else{
             var_dump('Already subscribe'); # TODO!
-        }
+        }*/
     }
 
     /**

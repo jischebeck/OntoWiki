@@ -133,9 +133,6 @@ class HistoryPlugin extends OntoWiki_Plugin
                         $store->deleteMultipleStatements($tmpGraphUri, $task['content']);
                     else
                         $store->addMultipleStatements ($tmpGraphUri, $task['content']);
-                        
-                    #foreach($task['content'] as $subject => $triple)                        
-                    #    $this->_log('triple for subject = '.$subject.' : '.print_r($triple,true));
                 }
                 $versioning->endAction();
             }
