@@ -5,6 +5,7 @@ HISTORY_ACTIONTYPE_22;Statement gelöscht
 HISTORY_ACTIONTYPE_23;"Änderungen wiederhergestellt"
 HISTORY_ACTIONTYPE_120;Daten zur Wissensbasis hinzugefügt
 HISTORY_ACTIONTYPE_130;Ressource gelöscht
+HISTORY_ACTIONTYPE_1110;Aktualisiert mittels des Sync-Feeds
 select;Auswahl
 user;Benutzer
 timestamp;Zeitstempel

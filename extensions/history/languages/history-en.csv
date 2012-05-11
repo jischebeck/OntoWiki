@@ -5,5 +5,6 @@ HISTORY_ACTIONTYPE_22;Statement deleted
 HISTORY_ACTIONTYPE_23;Rollback
 HISTORY_ACTIONTYPE_120;Added data to knowledge base
 HISTORY_ACTIONTYPE_130;Resource deleted
+HISTORY_ACTIONTYPE_1110;Updated through sync feed
 Versions for %1$s
 action-type;Action type
