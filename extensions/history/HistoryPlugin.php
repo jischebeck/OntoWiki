@@ -17,6 +17,10 @@
  */
 class HistoryPlugin extends OntoWiki_Plugin
 {
+    /**
+     * New versioning type codes.
+     */
+    const VERSIONING_PUBSUB_ACTION_TYPE = 1110;
     
     public function onPropertiesAction($event){
         $translate = OntoWiki::getInstance()->translate;
@@ -109,8 +113,18 @@ class HistoryPlugin extends OntoWiki_Plugin
                         }
                 }
                 $tasks = array_reverse($tasks);
-                $store = Erfurt_App::getInstance()->getStore();
-                    
+                $erfurt = Erfurt_App::getInstance();
+                $store = $erfurt->getStore();                
+                $versioning = $erfurt->getVersioning();
+                
+                $actionSpec = array(
+                    'type'        => self::VERSIONING_PUBSUB_ACTION_TYPE,
+                    'modeluri'    => $tmpGraphUri,
+                    'resourceuri' => $resourceUri
+                );
+                // Start action, add statements, finish action.
+                $versioning->startAction($actionSpec);
+                
                 foreach($tasks as $task) {
                     $this->_log("--------------------------");
                     $this->_log("entry id: ".$task['id']);
@@ -123,6 +137,7 @@ class HistoryPlugin extends OntoWiki_Plugin
                     #foreach($task['content'] as $subject => $triple)                        
                     #    $this->_log('triple for subject = '.$subject.' : '.print_r($triple,true));
                 }
+                $versioning->endAction();
             }
             else
                 return;
