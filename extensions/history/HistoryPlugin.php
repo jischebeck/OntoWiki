@@ -65,11 +65,7 @@ class HistoryPlugin extends OntoWiki_Plugin
     }
     
     public function onExternalFeedDidChange(Erfurt_Event $event){
-        $this->_log('processing payload: ');
-        #!! CHANGE - START !! enviroment dependent
-        $tmpGraphUri = 'http://faxpsubu/casd/';
-        #!! CHANGE - END !! 
-        
+        $this->_log('processing payload: ');        
         try{
             // creates a feed object from the feed string
             $this->_privateConfig->__set('timeout', 50);
@@ -119,7 +115,7 @@ class HistoryPlugin extends OntoWiki_Plugin
                 
                 $actionSpec = array(
                     'type'        => self::VERSIONING_PUBSUB_ACTION_TYPE,
-                    'modeluri'    => $tmpGraphUri,
+                    'modeluri'    => $event->model,
                     'resourceuri' => $resourceUri
                 );
                 // Start action, add statements, finish action.
@@ -130,9 +126,9 @@ class HistoryPlugin extends OntoWiki_Plugin
                     $this->_log("entry id: ".$task['id']);
                     $this->_log('to be '.($task['type'] ? 'deleted' : 'added').': '.print_r($task['content'],true));
                     if($task['type'])
-                        $store->deleteMultipleStatements($tmpGraphUri, $task['content']);
+                        $store->deleteMultipleStatements($event->model, $task['content']);
                     else
-                        $store->addMultipleStatements ($tmpGraphUri, $task['content']);
+                        $store->addMultipleStatements ($event->model, $task['content']);
                 }
                 $versioning->endAction();
             }

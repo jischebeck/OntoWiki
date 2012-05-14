@@ -200,8 +200,15 @@ class HistoryController extends OntoWiki_Controller_Component
         }
         else
             $title = $resource;
-        // setting if class or instances
-        if ($islist) {
+        // setting if graph, class or instances        
+        if ((string) $resource === (string) $model) {
+            $windowTitle = sprintf($translate->_('Versions for %1$s'), $model->__toString());
+            
+            $historyArray = $versioning->getHistoryForGraph(
+                (string) $model,
+                $page
+            );
+        } elseif ($islist) {
             $windowTitle = $translate->_('Versions for elements of the list');
 
             $listHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('List');
@@ -216,7 +223,6 @@ class HistoryController extends OntoWiki_Controller_Component
             }
 
             $query = clone $list->getResourceQuery();
-            #var_dump((string) $query);exit;
             $query->setLimit(0);
             $query->setOffset(0);
             //echo htmlentities($query);
@@ -269,6 +275,7 @@ class HistoryController extends OntoWiki_Controller_Component
     {
         // 1. Retrieve HTTP-Header and check for X-Pingback
         $headers = get_headers($resourceUri, 1);
+        $this->_log('headers: '.print_r($headers,true));
         if (!is_array($headers)) {
             return null;
         }
@@ -323,7 +330,7 @@ class HistoryController extends OntoWiki_Controller_Component
             try {
                 $result = $parser->parse($rdfString, Erfurt_Syntax_RdfParser::LOCATOR_DATASTRING);
             } catch (Exception $e) {
-                $this->_logError($e->getMessage());
+                $this->_log($e->getMessage().' When parsing '.$rdfString);
                 return null;
             }
 
@@ -386,53 +393,6 @@ class HistoryController extends OntoWiki_Controller_Component
         $client->setParameterGet('m', $get['m']);
         $response = $client->request();
         $this->_log('subscribe response: '.print_r($response,true));
-        
-        /*
-        $subscribeUrl = $this->_getSubscribeUrlFromFeed($feedUrl);
-
-        $client = Erfurt_App::getInstance()->getHttpClient($subscribeUrl, array(
-                    'maxredirects' => 0,
-                    'timeout' => 3
-                ));
-        $client->setMethod('POST');
-        $client->setParameterPost('hub_mode', 'subscribe');//unsubscribe
-        $client->setParameterPost(
-            'hub_callback', 
-            urlencode(OntoWiki::getInstance()->getUrlBase().$this->_privateConfig->callback)
-        );
-        $client->setParameterPost('hub_topic', urlencode($feedUrl));
-        $client->setParameterPost('hub_verify', 'sync');
-        # TODO: async subscription
-        $response = $client->request();
-
-        if ($response->getStatus() === 204) {            
-            # TODO: async subscription
-            $response = $client->request();
-                
-            # sync subscription
-            $store = Erfurt_App::getInstance()->getStore();
-
-            $subscription = $this->_privateConfig->subscriptionClass.time();
-
-            $statements = new Erfurt_Rdf_MemoryModel;
-            $statements->addRelation($subscription, $this->_privateConfig->feedPredicate, $feedUrl);
-            $statements->addRelation($subscription, $this->_privateConfig->ownerPredicate, $this->_owApp->getUser()->getUri());
-            $statements->addRelation($subscription, $this->_privateConfig->resourcePredicate, $get['r']);
-            $statements->addRelation($subscription, $this->_privateConfig->modelPredicate, $get['m']);
-            $statements->addRelation($subscription, $this->_privateConfig->typePredicate, $this->_privateConfig->subscriptionClass);
-            
-            $store->addMultipleStatements($this->_privateConfig->sysOntoUri, $statements->getStatements(), false);
-            
-
-            var_dump('Local subscription added'); # TODO!
-        }
-        else if ($response->getStatus() === 202) {
-            # TODO: async subscription
-            var_dump('Asynchron subscription currently not supported'); # TODO!
-        }
-        else{
-            var_dump('Already subscribe'); # TODO!
-        }*/
     }
 
     /**
