@@ -34,7 +34,9 @@ class OntoWiki_Controller_Plugin_ListSetupHelper extends Zend_Controller_Plugin_
         $ontoWiki        = OntoWiki::getInstance();
         $listHelper = Zend_Controller_Action_HelperBroker::getStaticHelper('List');
         // only once and only when possible
-        if (!$this->_isSetup &&
+        if (
+                !$this->_isSetup && 
+                $ontoWiki->selectedModel != null && 
             (
                 /*
                  *these are paramters that change the list
@@ -77,7 +79,8 @@ class OntoWiki_Controller_Plugin_ListSetupHelper extends Zend_Controller_Plugin_
 
             $list = $listHelper->getLastList();
 
-            if ((!isset($request->list) && $list == null) || // nothing build yet
+            if (
+                (!isset($request->list) && $list == null) || // nothing build yet
                 isset($request->init) // force a rebuild
             ) {
                 // instantiate model, that selects all resources
@@ -155,6 +158,14 @@ class OntoWiki_Controller_Plugin_ListSetupHelper extends Zend_Controller_Plugin_
                 $config = _json_decode($request->instancesconfig);
                 if ($config == false) {
                     throw new OntoWiki_Exception('Invalid parameter instancesconfig (json_decode failed)');
+                }
+                
+                if (isset($config->sort)) {
+                    if($config->sort == null){
+                        $list->orderByUri($config->sort->asc);
+                    } else {
+                        $list->setOrderProperty($config->sort->uri, $config->sort->asc);
+                    }
                 }
 
                 if (isset($config->shownProperties)) {
