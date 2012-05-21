@@ -385,7 +385,7 @@ class HistoryController extends OntoWiki_Controller_Component
 
         $client = Erfurt_App::getInstance()->getHttpClient(OntoWiki::getInstance()->getUrlBase().$this->_privateConfig->subscribeUrl, array(
                     'maxredirects' => 0,
-                    'timeout' => 3
+                    'timeout' => 30
                 ));
         $client->setMethod('GET');
         $client->setParameterGet('topic', $feedUrl);
