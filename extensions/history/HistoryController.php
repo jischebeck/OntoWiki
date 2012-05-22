@@ -375,12 +375,17 @@ class HistoryController extends OntoWiki_Controller_Component
 
     public function subscribeAction()
     {
+        // Disable rendering
+        $this->_helper->viewRenderer->setNoRender();
+        $this->_helper->layout()->disableLayout();
+        
         if (!$this->_request->isGet()) {
             return $this->_exception(400, 'Only GET allowed for remote subscription');
         }
 
         // uses the resource uri from the request and searchs for according topic url
         $get = $this->_request->getQuery();
+        
         $feedUrl = $this->_discoverFeedURL($get['r']);
 
         $client = Erfurt_App::getInstance()->getHttpClient(OntoWiki::getInstance()->getUrlBase().$this->_privateConfig->subscribeUrl, array(
@@ -391,8 +396,38 @@ class HistoryController extends OntoWiki_Controller_Component
         $client->setParameterGet('topic', $feedUrl);
         $client->setParameterGet('r', $get['r']);
         $client->setParameterGet('m', $get['m']);
+        $client->setParameterGet('user', $this->_owApp->getUser()->getUri());
         $response = $client->request();
-        $this->_log('subscribe response: '.print_r($response,true));
+        
+        if($response->getBody())
+            return $this->_sendResponse(
+                    true,
+                    'Sucessfully subscribed.',
+                    OntoWiki_Message::SUCCESS
+                );   
+        else
+            return $this->_sendResponse(
+                    true,
+                    'Subscription failed.',
+                    OntoWiki_Message::ERROR
+                );  
+    }
+    
+    private function _sendResponse($returnValue, $message = null, $messageType = OntoWiki_Message::SUCCESS)
+    {
+        if (null !== $message) {
+            $translate = $this->_owApp->translate;
+
+            $message = $translate->_($message);
+            $this->_owApp->appendMessage(
+                new OntoWiki_Message($message, $messageType)
+            );
+        }
+
+        $this->_response->setHeader('Content-Type', 'application/json', true);
+        $this->_response->setBody(json_encode($returnValue));
+        $this->_response->sendResponse();
+        exit;
     }
 
     /**

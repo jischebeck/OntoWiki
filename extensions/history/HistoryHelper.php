@@ -35,6 +35,10 @@ class HistoryHelper extends OntoWiki_Component_Helper
             'action'     => 'list',       // list action
             'name'       => 'History',
             'priority'   => 30));
+        
+        $pathBase = $this->_componentManager->getComponentUrl('history');
+        $this->_owApp->view->headScript()->appendFile($pathBase.'scripts/history.js');
+        #$this->_owApp->view->headLink()->appendStylesheet($pathBase.'css/jquery.autocomplete.css');
     }
 }
 

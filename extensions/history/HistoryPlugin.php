@@ -28,7 +28,25 @@ class HistoryPlugin extends OntoWiki_Plugin
         
         $menu = OntoWiki_Menu_Registry::getInstance()->getMenu('resource');
         $menu->appendEntry(OntoWiki_Menu::SEPARATOR);
-        $menu->appendEntry($translate->_('Subscribe for Resource Feed'), array('url' => $owApp->getUrlBase().'history/subscribe?r='.urlencode($event->uri).'&m='.urlencode($event->graph)));
+        
+        /*$query = 'ASK FROM <'.$this->_privateConfig->sysOntoUri.'>
+                      WHERE {
+                        ?s <'.$this->_privateConfig->feedPredicate.'> <'.$feed->link('self').'>.
+                        ?s <'.$this->_privateConfig->modelPredicate.'> ?m.
+                      }';
+        $queryObject = Erfurt_Sparql_SimpleQuery::initWithString($query);            
+        $store = Erfurt_App::getInstance()->getStore();
+        $result = $store->sparqlQuery($queryObject, array(STORE_USE_AC => false));
+        $this->_log("rs: ".print_r($store->sparqlQuery($queryObject, array(STORE_USE_AC => false)),true));*/
+        
+        #$menu->appendEntry($translate->_('Subscribe for Resource Feed'), array('url' => $owApp->getUrlBase().'history/subscribe?r='.urlencode($event->uri).'&m='.urlencode($event->graph)));
+        $menu->appendEntry(
+                    $translate->_('Subscribe for Resource Feed'),
+                    array(
+                        'id' => 'subscribe_for_syncfeed',
+                        'class' => $event->uri.' '.$event->graph
+                    )
+                );
     }
 
     public function onAddStatement(Erfurt_Event $event)
@@ -119,7 +137,9 @@ class HistoryPlugin extends OntoWiki_Plugin
                     'resourceuri' => $resourceUri
                 );
                 // Start action, add statements, finish action.
+                $versioning->setUserUri($event->subOwner);                
                 $versioning->startAction($actionSpec);
+                
                 
                 foreach($tasks as $task) {
                     $this->_log("--------------------------");
