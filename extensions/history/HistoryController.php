@@ -109,11 +109,7 @@ class HistoryController extends OntoWiki_Controller_Component
 			$result = $this->getActionTriple($historyItem['id'], false, $resource, $model);
 			$content .= json_encode($result);	
 
-            $entry->setContent( htmlentities($content) );
-            
-            $this->_log('history item: '.print_r($historyItem,true));
-            $this->_log('result triple: '.print_r($result,true));
-            $this->_log('entry content: '.print_r($entry->getContent(),true));    
+            $entry->setContent( htmlentities($content) );   
 
             $feed->addEntry($entry);
         }
@@ -128,7 +124,6 @@ class HistoryController extends OntoWiki_Controller_Component
 
         $out = $feed->export('atom');
 
-#$this->_log('feed: '.print_r($out,true));
 		$pattern = '/updated>\n(.+?)link rel="alternate"/';
 		$replace = "updated>\n$1link";
 		$out = preg_replace($pattern, $replace, $out);
@@ -254,6 +249,9 @@ class HistoryController extends OntoWiki_Controller_Component
         return $historyArray;
     }
 
+    /*
+     * This methods creates the sync-feed url for a given resource (and a model)
+     */
     public function getFeedUrl($resource, $model = null)
     {
         return self::getFeedUrlStatic(
@@ -262,7 +260,6 @@ class HistoryController extends OntoWiki_Controller_Component
                 $this->_privateConfig->resourceParamName, $model
         );
     }
-
     public static function getFeedUrlStatic($urlbase, $resource, $resourceParamName, $model = null)
     {
         if($model === null)
@@ -271,21 +268,20 @@ class HistoryController extends OntoWiki_Controller_Component
             return $urlbase . 'history/feed?'.$resourceParamName.'='.  urlencode($resource).'&m='.  urlencode($model);
     }
 
+    /*
+     * This method tries to read out the sync-feed url for a given resource
+     */
     protected function _discoverFeedURL($resourceUri)
     {
         // 1. Retrieve HTTP-Header and check for X-Pingback
         $headers = get_headers($resourceUri, 1);
-        $this->_log('headers: '.print_r($headers,true));
         if (!is_array($headers)) {
             return null;
         }
         if (isset($headers['X-Syncfeed'])) {
             if (is_array($headers['X-Syncfeed'])) {
-                $this->_log($headers['X-Syncfeed'][0]);
                 return $headers['X-Syncfeed'][0];
             }
-
-            $this->_log($headers['X-Syncfeed']);
             return $headers['X-Syncfeed'];
         }
 
@@ -348,31 +344,11 @@ class HistoryController extends OntoWiki_Controller_Component
         return null;
     }
 
-    protected function _getSubscribeUrlFromFeed($feedUrl)
-    {
-        $client = Erfurt_App::getInstance()->getHttpClient(
-            $feedUrl, array(
-                'maxredirects' => 5,
-                'timeout' => 10
-            )
-        );
-        $response = $client->request();
-        if ($response->getStatus() === 200) {
-            $htmlDoc = new DOMDocument();
-            $result = @$htmlDoc->loadHtml($response->getBody());
-            $relElements = $htmlDoc->getElementsByTagName('link');
-
-            foreach ($relElements as $relElem) {
-                $rel = $relElem->getAttribute('rel');
-                if (strtolower($rel) === 'hub') {
-                    return $relElem->getAttribute('href');
-                }
-            }
-        }
-
-        return null;
-    }
-
+    /*
+     * This method initiates the subscription for the sync-feed for a given resource. 
+     * Therefore the topic-url (feed-url) is searched and the parameters are sended
+     * to the locally saved subscription-url. 
+     */
     public function subscribeAction()
     {
         // Disable rendering
@@ -413,6 +389,10 @@ class HistoryController extends OntoWiki_Controller_Component
                 );  
     }
     
+    /*
+     * This method is used to create the gui response message when calling the
+     * subscribeAction
+     */
     private function _sendResponse($returnValue, $message = null, $messageType = OntoWiki_Message::SUCCESS)
     {
         if (null !== $message) {
@@ -698,17 +678,11 @@ class HistoryController extends OntoWiki_Controller_Component
         $subject = key($walkArray);
         $predicate = key($walkArray[$subject]);
         $object = $walkArray[$subject][$predicate][0];
-        $this->_log('s: '.print_r($subject,true));
-        $this->_log('p: '.print_r($predicate,true));
-        $this->_log('o: '.print_r($object,true));
         if($object['type'] === 'uri')
             $statement->addRelation($subject, $predicate, $object['value']);
         else
             $statement->addAttribute ($subject, $predicate, $object['value']);
-        #$this->_log('addst: '.print_r($statement->getStatements(),true));
         return $statement->getStatements();
-        #$rdfxml = $this->serialize($resource, $model, false, true, $addedStatements);        
-        #$this->_log('rdfxml: '.print_r($rdfxml,true));
     }
 
     /*

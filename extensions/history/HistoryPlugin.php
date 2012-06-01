@@ -22,6 +22,10 @@ class HistoryPlugin extends OntoWiki_Plugin
      */
     const VERSIONING_PUBSUB_ACTION_TYPE = 1110;
     
+    /*
+     * This method is triggered when the properties site for a resource is called.
+     * It adds an entry for the sync-feed subscription.
+     */
     public function onPropertiesAction($event){
         $translate = OntoWiki::getInstance()->translate;
         $owApp = OntoWiki::getInstance();
@@ -49,28 +53,45 @@ class HistoryPlugin extends OntoWiki_Plugin
                 );
     }
 
+    /*
+     * This method should be triggered when a statement is added to the triplestore.
+     */
     public function onAddStatement(Erfurt_Event $event)
     {
-        $this->_log("histories onAddStatement");
+        $this->_log("enter histories onAddStatement");
     }
 
+    /*
+     * This method is triggered when an array of statements is added to the triplestore.
+     * It triggers an event which indicates that the sync-feed for a resource was changed.
+     */
     public function onAddMultipleStatements(Erfurt_Event $event)
     {
-        $this->_log("histories onAddMultipleStatements");
+        $this->_log("enter histories onAddMultipleStatements");
         $this->_triggerInternalFeedChange($event->statements);        
     }
 
+    /*
+     * This method should be triggered when a statement is deleted from the triplestore.
+     */
     public function onDeleteMatchingStatements(Erfurt_Event $event)
     {
-        $this->_log("histories onDeleteMatchingStatements");
+        $this->_log("enter histories onDeleteMatchingStatements");
     }
 
+    /*
+     * This method is triggered when an array of statements is deleted from the triplestore.
+     * It triggers an event which indicates that the sync-feed for a resource was changed.
+     */
     public function onDeleteMultipleStatements(Erfurt_Event $event)
     {
-        $this->_log("histories onDeleteMultipleStatements");
+        $this->_log("enter histories onDeleteMultipleStatements");
         $this->_triggerInternalFeedChange($event->statements);
     }
     
+    /*
+     * This method triggers an event which indicates that the sync-feed for a resource was changed.
+     */
     private function _triggerInternalFeedChange($statements){        
         $urlBase = OntoWiki::getInstance()->getUrlBase();
         $subEvent = new Erfurt_Event('onInternalFeedDidChange');
@@ -82,6 +103,9 @@ class HistoryPlugin extends OntoWiki_Plugin
         
     }
     
+    /*
+     * This method is triggered when a sync-feed is changed where a local subscription is available.
+     */
     public function onExternalFeedDidChange(Erfurt_Event $event){
         $this->_log('processing payload: ');        
         try{
@@ -107,7 +131,6 @@ class HistoryPlugin extends OntoWiki_Plugin
                     $deleted = $content['deleted'];                    
                     if(isset($added) && sizeof($added) > 0)
                         foreach($added as $add) {
-                            #$this->_log("to be added: ".print_r($add,true));
                             $task = array(
                                 'type'    => 0,
                                 'content' => $add,
@@ -117,7 +140,6 @@ class HistoryPlugin extends OntoWiki_Plugin
                         }
                     if(isset($deleted) && sizeof($deleted) > 0)
                         foreach($deleted as $delete) {
-                            #$this->_log("to be deleted: ".print_r($delete,true));
                             $task = array(
                                 'type'    => 1,
                                 'content' => $delete,
@@ -142,9 +164,6 @@ class HistoryPlugin extends OntoWiki_Plugin
                 
                 
                 foreach($tasks as $task) {
-                    $this->_log("--------------------------");
-                    $this->_log("entry id: ".$task['id']);
-                    $this->_log('to be '.($task['type'] ? 'deleted' : 'added').': '.print_r($task['content'],true));
                     if($task['type'])
                         $store->deleteMultipleStatements($event->model, $task['content']);
                     else
