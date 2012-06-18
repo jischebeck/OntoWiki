@@ -141,8 +141,10 @@ $(document).ready(function() {
 
     /* trigger selection events */
     $('table.resource-list > tbody > tr').live('click', function(e) {
-        var selectee     = $(this);
-        var selectionURI = $(this).children('td').children('a').attr('about');
+        var selectee = $(this);
+
+        // try the row itself and the firs link
+        var selectionURI = $(this).attr('about') | $(this).children('td').children('a').attr('about');
 
         // return if we have no URI (e.g. a Literal list)
         if (typeof selectionURI == 'undefined') {
@@ -150,7 +152,7 @@ $(document).ready(function() {
         }
 
         // return true if user clicked on a link (so the link is fired)
-        if ( $(e.target).is('a') ) {
+        if ($(e.target).is('a')) {
             return true;
         }
 
