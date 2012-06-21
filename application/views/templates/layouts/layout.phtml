@@ -111,7 +111,7 @@
                         <?php echo $this->preTabsContent; ?>
                     </div>
                 <?php endif; ?>
-                <?php echo $this->partial('partials/navigation.phtml', array('navigation' => OntoWiki_Navigation::toArray())) ?>
+                <?php echo $this->placeholder('main.window.navigation'); ?>
                 
                 <?php if ($this->has('main.window.innerwindows')): ?>
                     <div class="content has-innerwindows">

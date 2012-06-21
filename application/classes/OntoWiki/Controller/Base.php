@@ -211,6 +211,10 @@ class OntoWiki_Controller_Base extends Zend_Controller_Action
         if (strlen($this->view->placeholder('main.window.title')->toString()) > 0) {
             $this->view->headTitle($this->view->placeholder('main.window.title')->toString());
         }
+
+        $this->view->placeholder('main.window.navigation')->set(
+            $this->view->partial('partials/navigation.phtml',
+                                 array('navigation' => OntoWiki_Navigation::toArray())));
     }
 
     /**
