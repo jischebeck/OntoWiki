@@ -252,6 +252,7 @@ class OntoWiki_Utils
                 // TODO: load from config
                 $uriSchemas['nodeID'] = true;
                 $uriSchemas['node'] = true;
+                $uriSchemas['_'] = true;
                 
                 if (array_key_exists($prefix, (array)$uriSchemas)) {
                     // prefix is an allowed URI schema
