@@ -680,6 +680,37 @@ class OntoWiki_Model_Instances extends OntoWiki_Model
         return $this->_filter;
     }
 
+    public function addDisjunctiveTypeFilters(array $types, $id = null, array $options = array())
+    {
+        if (!$id){
+            $id = 'type' . count($this->_filter);
+        } else {
+            if (isset($this->_filter[$id])) {
+                $this->removeFilter($id);
+            }
+        }
+
+        // Create UNION of all types
+        $union = new Erfurt_Sparql_Query2_GroupOrUnionGraphPattern();
+        foreach ($types as $type) {
+            $union->addElement(
+                new Erfurt_Sparql_Query2_GroupGraphPattern(
+                    new Erfurt_Sparql_Query2_Triple(
+                        $this->_resourceVar,
+                        new Erfurt_Sparql_Query2_IriRef(EF_RDF_TYPE),
+                        new Erfurt_Sparql_Query2_IriRef($type)
+                    )
+                )
+            );
+        }
+
+        // Add UNION element
+        $this->_resourceQuery->addElement($union);
+
+        // Remove default ?s ?p ?o pattern
+        $this->allTriple->remove($this->_resourceQuery);
+    }
+
     /**
      *
      * @param string $type the uri of the class
